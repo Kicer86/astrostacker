@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 
 find_package(OpenCV REQUIRED)
+find_package(OpenMP REQUIRED)
 
 add_executable(astro-stacker
     main.cpp
@@ -25,4 +26,5 @@ target_sources(astro-stacker
 target_link_libraries(astro-stacker
     PRIVATE
         opencv_videoio
+        OpenMP::OpenMP_CXX
 )
