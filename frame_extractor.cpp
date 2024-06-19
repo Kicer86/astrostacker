@@ -51,7 +51,7 @@ export void extractVideo(std::string_view file, std::string_view dir)
 
             video.set(cv::CAP_PROP_POS_FRAMES, first_frame);
 
-            for(double frame = first_frame; frame < last_frame; frame++)
+            for(int64_t frame = first_frame; frame < last_frame; frame++)
             {
                 const auto start = std::chrono::high_resolution_clock::now();
 
