@@ -10,6 +10,11 @@ export module frame_extractor;
 
 namespace
 {
+    int64_t divideWithRoundUp(int64_t lhs, int64_t rhs)
+    {
+        return (lhs + rhs - 1) / rhs;
+    }
+
     int64_t videoFrames(std::string_view file)
     {
         cv::VideoCapture video(std::string(file), cv::CAP_FFMPEG);
@@ -34,7 +39,10 @@ export void extractVideo(std::string_view file, std::string_view dir)
     {
         const auto threads = omp_get_num_threads();
         const auto thread = omp_get_thread_num();
-        const auto group_size = frames > threads? frames / threads : 1;
+        const auto group_size = frames > threads? divideWithRoundUp(frames, threads) : 1;
+
+        // Thread * frames-to-process-by-each-thread needs to be at least equal to number of frames
+        assert(threads * group_size >= frames);
 
         #pragma omp master
         {
@@ -58,7 +66,7 @@ export void extractVideo(std::string_view file, std::string_view dir)
                 cv::Mat frameMat;
                 video >> frameMat;
 
-                cv::imwrite(std::format("{}/{}.tiff", dir, std::to_string(static_cast<int64_t>(frame))), frameMat);
+                //cv::imwrite(std::format("{}/{}.tiff", dir, std::to_string(static_cast<int64_t>(frame))), frameMat);
                 const auto stop = std::chrono::high_resolution_clock::now();
                 const auto duration = stop - start;
                 const auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
