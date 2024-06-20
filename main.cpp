@@ -18,7 +18,10 @@ int main(int argc, char** argv)
 
     std::filesystem::create_directory(wd);
 
-    extractFrames(input_file, wd);
+    const std::string extractedFramesDir = std::string(wd) + "/images";
+    std::filesystem::create_directory(extractedFramesDir);
+
+    extractFrames(input_file, extractedFramesDir);
 
     return 0;
 }
