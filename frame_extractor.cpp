@@ -41,7 +41,8 @@ namespace
                 cv::Mat frameMat;
                 video >> frameMat;
 
-                cv::imwrite(std::format("{}/{}.tiff", dir, std::to_string(static_cast<int64_t>(frame))), frameMat);
+                const std::string path = std::format("{}/{}.tiff", dir, std::to_string(static_cast<int64_t>(frame)));
+                cv::imwrite(path, frameMat);
             }
         }
     }
