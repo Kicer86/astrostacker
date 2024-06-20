@@ -47,7 +47,7 @@ namespace
     }
 }
 
-export void extractVideo(std::string_view file, std::string_view dir)
+export void extractFrames(std::string_view file, std::string_view dir)
 {
     const auto total_start = std::chrono::high_resolution_clock::now();
     const auto frames = videoFrames(file);

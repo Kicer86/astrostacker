@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 
     std::filesystem::create_directory(wd);
 
-    extractVideo(input_file, wd);
+    extractFrames(input_file, wd);
 
     return 0;
 }
