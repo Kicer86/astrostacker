@@ -34,10 +34,12 @@ export std::vector<std::string> pickImages(const std::vector<std::string>& image
     std::vector<std::string> picks;
     std::vector<std::pair<double, int>> sharpness;
     std::vector<std::pair<double, int>> contrast;
+    std::vector<std::pair<double, int>> score;
 
     const int count = images.size();
     sharpness.resize(count);
     contrast.resize(count);
+    score.resize(count);
 
     #pragma omp parallel for
     for(int i = 0; i < count; i++)
@@ -48,6 +50,7 @@ export std::vector<std::string> pickImages(const std::vector<std::string>& image
 
         sharpness[i] = {s, i};
         contrast[i] = {c, i};
+        score[i] = {s * c, i};
     }
 
     auto cmp = [](const auto& lhs, const auto& rhs)
@@ -57,15 +60,24 @@ export std::vector<std::string> pickImages(const std::vector<std::string>& image
 
     std::sort(sharpness.begin(), sharpness.end(), cmp);
     std::sort(contrast.begin(), contrast.end(), cmp);
+    std::sort(score.begin(), score.end(), cmp);
 
     std::cout << "Sharpest images:\n";
     for(int i = 0; i < std::min(10, count); i++)
-        std::cout << images[sharpness[i].second] << " with score: " << sharpness[i].first << "\n";
+        std::cout << images[sharpness[i].second] << " with sharpness: " << sharpness[i].first << "\n";
     std::cout << "\n";
 
     std::cout << "Images with biggest contrast:\n";
     for(int i = 0; i < std::min(10, count); i++)
-        std::cout << images[contrast[i].second] << " with score: " << contrast[i].first << "\n";
+        std::cout << images[contrast[i].second] << " with contrast: " << contrast[i].first << "\n";
+    std::cout << "\n";
+
+    std::cout << "Overall score:\n";
+    for(int i = 0; i < std::min(10, count); i++)
+    {
+        std::cout << images[score[i].second] << " with score: " << score[i].first << "\n";
+        picks.push_back(images[score[i].second]);
+    }
 
     return picks;
 }
