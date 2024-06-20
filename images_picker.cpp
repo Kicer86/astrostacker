@@ -1,7 +1,10 @@
 
 module;
 
+#include <algorithm>
+#include <numeric>
 #include <vector>
+#include <ranges>
 #include <string>
 #include <opencv2/opencv.hpp>
 
@@ -10,7 +13,8 @@ export module frames_picker;
 
 namespace
 {
-    double computeSharpness(const cv::Mat& img) {
+    double computeSharpness(const cv::Mat& img)
+    {
         cv::Mat gray, laplacian;
         cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
         cv::Laplacian(gray, laplacian, CV_64F);
@@ -19,19 +23,49 @@ namespace
         return sigma.val[0] * sigma.val[0];
     }
 
-    double computeContrast(const cv::Mat& img) {
+    double computeContrast(const cv::Mat& img)
+    {
         cv::Mat gray;
         cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
         cv::Scalar mu, sigma;
         cv::meanStdDev(gray, mu, sigma);
         return sigma.val[0];
     }
+
+    double calculateMean(const std::vector<double>& data)
+    {
+        const double sum = std::accumulate(data.begin(), data.end(), 0.0);
+        return sum / data.size();
+    }
+
+    double calculateStdDev(const std::vector<double>& data, double mean)
+    {
+        const double sq_sum = std::inner_product(data.begin(), data.end(), data.begin(), 0.0);
+        return std::sqrt(sq_sum / data.size() - mean * mean);
+    }
+
+    std::vector<int> selectTopImagesZScores(const std::vector<std::pair<double, int>>& images, double threshold = 1.0) {
+        std::vector<double> scores;
+        std::ranges::transform(images, std::back_inserter(scores), [](const std::pair<double, int> score) {return score.first;});
+
+        double mean = calculateMean(scores);
+        double stdDev = calculateStdDev(scores, mean);
+        std::vector<int> topImages;
+
+        for (const auto& image: images)
+        {
+            const double zScore = (image.first - mean) / stdDev;
+            if (zScore > threshold)
+                topImages.push_back(image.second);
+        }
+
+        return topImages;
+    }
 }
 
 
 export std::vector<std::string> pickImages(const std::vector<std::string>& images)
 {
-    std::vector<std::string> picks;
     std::vector<std::pair<double, int>> sharpness;
     std::vector<std::pair<double, int>> contrast;
     std::vector<std::pair<double, int>> score;
@@ -74,10 +108,10 @@ export std::vector<std::string> pickImages(const std::vector<std::string>& image
 
     std::cout << "Overall score:\n";
     for(int i = 0; i < std::min(10, count); i++)
-    {
         std::cout << images[score[i].second] << " with score: " << score[i].first << "\n";
-        picks.push_back(images[score[i].second]);
-    }
 
-    return picks;
+    const auto top = selectTopImagesZScores(score);
+    const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
+
+    return {topImages.begin(), topImages.end()};
 }

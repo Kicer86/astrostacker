@@ -25,6 +25,9 @@ int main(int argc, char** argv)
     const auto images = extractFrames(input_file, extractedFramesDir);
     const auto bestImages = pickImages(images);
 
+    std::cout << "\n\nPicked images (" << bestImages.size() << "):\n";
+    for(const auto& bestImage: bestImages)
+        std::cout << bestImage << "\n";
 
     return 0;
 }
