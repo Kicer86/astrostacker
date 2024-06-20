@@ -52,11 +52,14 @@ export void extractVideo(std::string_view file, std::string_view dir)
     const auto total_start = std::chrono::high_resolution_clock::now();
     const auto frames = videoFrames(file);
 
+    if (frames == 0)
+        return;
+
     #pragma omp parallel
     {
         const auto threads = omp_get_num_threads();
         const auto thread = omp_get_thread_num();
-        const auto group_size = frames > threads? divideWithRoundUp(frames, threads) : 1;
+        const auto group_size = divideWithRoundUp(frames, threads);
 
         // Thread * frames-to-process-by-each-thread needs to be at least equal to number of frames
         assert(threads * group_size >= frames);
