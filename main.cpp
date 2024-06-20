@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     const std::string extractedFramesDir = std::string(wd) + "/images";
     std::filesystem::create_directory(extractedFramesDir);
 
-    extractFrames(input_file, extractedFramesDir);
+    const auto frames = extractFrames(input_file, extractedFramesDir);
 
     return 0;
 }
