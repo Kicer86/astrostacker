@@ -66,13 +66,9 @@ namespace
 
 export std::vector<std::string> pickImages(const std::vector<std::string>& images)
 {
-    std::vector<std::pair<double, int>> sharpness;
-    std::vector<std::pair<double, int>> contrast;
     std::vector<std::pair<double, int>> score;
 
     const int count = images.size();
-    sharpness.resize(count);
-    contrast.resize(count);
     score.resize(count);
 
     #pragma omp parallel for
@@ -82,8 +78,6 @@ export std::vector<std::string> pickImages(const std::vector<std::string>& image
         const double s = computeSharpness(image);
         const double c = computeContrast(image);
 
-        sharpness[i] = {s, i};
-        contrast[i] = {c, i};
         score[i] = {s * c, i};
     }
 
@@ -92,23 +86,7 @@ export std::vector<std::string> pickImages(const std::vector<std::string>& image
         return lhs.first > rhs.first;
     };
 
-    std::sort(sharpness.begin(), sharpness.end(), cmp);
-    std::sort(contrast.begin(), contrast.end(), cmp);
     std::sort(score.begin(), score.end(), cmp);
-
-    std::cout << "Sharpest images:\n";
-    for(int i = 0; i < std::min(10, count); i++)
-        std::cout << images[sharpness[i].second] << " with sharpness: " << sharpness[i].first << "\n";
-    std::cout << "\n";
-
-    std::cout << "Images with biggest contrast:\n";
-    for(int i = 0; i < std::min(10, count); i++)
-        std::cout << images[contrast[i].second] << " with contrast: " << contrast[i].first << "\n";
-    std::cout << "\n";
-
-    std::cout << "Overall score:\n";
-    for(int i = 0; i < std::min(10, count); i++)
-        std::cout << images[score[i].second] << " with score: " << score[i].first << "\n";
 
     const auto top = selectTopImagesZScores(score);
     const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
