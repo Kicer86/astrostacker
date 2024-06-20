@@ -10,18 +10,17 @@ export module frame_extractor;
 
 namespace
 {
-    int64_t divideWithRoundUp(int64_t lhs, int64_t rhs)
+    int divideWithRoundUp(int lhs, int rhs)
     {
         return (lhs + rhs - 1) / rhs;
     }
 
-    int64_t videoFrames(std::string_view file)
+    int videoFrames(std::string_view file)
     {
         cv::VideoCapture video(std::string(file), cv::CAP_FFMPEG);
 
         if (video.isOpened())
         {
-            video.set(cv::CAP_PROP_POS_FRAMES, 0);
             const auto frames = video.get(cv::CAP_PROP_FRAME_COUNT);
             return frames;
         }
@@ -29,7 +28,7 @@ namespace
             return 0;
     }
 
-    std::vector<std::string> extractFrames(std::string_view file, std::string_view dir, int64_t firstFrame, int64_t lastFrame)
+    std::vector<std::string> extractFrames(std::string_view file, std::string_view dir, int firstFrame, int lastFrame)
     {
         const auto count = lastFrame - firstFrame;
         std::vector<std::string> paths;
@@ -40,12 +39,12 @@ namespace
         {
             video.set(cv::CAP_PROP_POS_FRAMES, firstFrame);
 
-            for(int64_t frame = firstFrame; frame < lastFrame; frame++)
+            for(int frame = firstFrame; frame < lastFrame; frame++)
             {
                 cv::Mat frameMat;
                 video >> frameMat;
 
-                const std::string path = std::format("{}/{}.tiff", dir, std::to_string(static_cast<int64_t>(frame)));
+                const std::string path = std::format("{}/{}.tiff", dir, frame);
                 cv::imwrite(path, frameMat);
                 paths.push_back(path);
             }
@@ -85,7 +84,7 @@ export std::vector<std::string> extractFrames(std::string_view file, std::string
         const auto lastFrame = std::min(frames, firstFrame + group_size);
         const auto thread_paths = extractFrames(file, dir, firstFrame, lastFrame);
 
-        for(int64_t out_f = firstFrame, in_f = 0; out_f < lastFrame; out_f++, in_f++)
+        for(int out_f = firstFrame, in_f = 0; out_f < lastFrame; out_f++, in_f++)
             paths[out_f] = thread_paths[in_f];
     }
 
