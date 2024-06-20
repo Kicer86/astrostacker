@@ -63,7 +63,7 @@ export void extractVideo(std::string_view file, std::string_view dir)
 
         #pragma omp master
         {
-            std::cout << "Starting extraction with " << threads << " threads. Group size: " << group_size << "\n";
+            std::cout << "Starting extraction of " << frames << " frames with " << threads << " threads. Group size: " << group_size << "\n";
         }
         #pragma omp barrier
 
