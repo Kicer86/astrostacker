@@ -28,6 +28,23 @@ namespace
         else
             return 0;
     }
+
+    void extractFrames(std::string_view file, std::string_view dir, int64_t firstFrame, int64_t lastFrame)
+    {
+        cv::VideoCapture video(std::string(file), cv::CAP_FFMPEG);
+        if (video.isOpened())
+        {
+            video.set(cv::CAP_PROP_POS_FRAMES, firstFrame);
+
+            for(int64_t frame = firstFrame; frame < lastFrame; frame++)
+            {
+                cv::Mat frameMat;
+                video >> frameMat;
+
+                cv::imwrite(std::format("{}/{}.tiff", dir, std::to_string(static_cast<int64_t>(frame))), frameMat);
+            }
+        }
+    }
 }
 
 export void extractVideo(std::string_view file, std::string_view dir)
@@ -50,32 +67,10 @@ export void extractVideo(std::string_view file, std::string_view dir)
         }
         #pragma omp barrier
 
-        cv::VideoCapture video(std::string(file), cv::CAP_FFMPEG);
-        if (video.isOpened())
-        {
-            const auto frames = static_cast<int64_t>(video.get(cv::CAP_PROP_FRAME_COUNT));
-            const auto first_frame = group_size * thread;
-            const auto last_frame = std::min(frames, first_frame + group_size);
+        const auto firstFrame = group_size * thread;
+        const auto lastFrame = std::min(frames, firstFrame + group_size);
 
-            video.set(cv::CAP_PROP_POS_FRAMES, first_frame);
-
-            for(int64_t frame = first_frame; frame < last_frame; frame++)
-            {
-                const auto start = std::chrono::high_resolution_clock::now();
-
-                cv::Mat frameMat;
-                video >> frameMat;
-
-                //cv::imwrite(std::format("{}/{}.tiff", dir, std::to_string(static_cast<int64_t>(frame))), frameMat);
-                const auto stop = std::chrono::high_resolution_clock::now();
-                const auto duration = stop - start;
-                const auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
-
-                std::stringstream thread_message;
-                thread_message << "Processed frame #" << frame << ". Time: " << duration_ms.count() << "ms\n";
-                std::cout << thread_message.str();
-            }
-        }
+        extractFrames(file, dir, firstFrame, lastFrame);
     }
 
     const auto total_stop = std::chrono::high_resolution_clock::now();
