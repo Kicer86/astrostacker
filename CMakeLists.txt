@@ -29,6 +29,7 @@ target_sources(astro-stacker
 
 target_link_libraries(astro-stacker
     PRIVATE
+        opencv_tracking
         opencv_videoio
         OpenMP::OpenMP_CXX
 )

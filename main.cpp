@@ -31,6 +31,8 @@ int main(int argc, char** argv)
         std::cout << bestImage << "\n";
 
     const std::filesystem::path alignedImagesDir = wd / "aligned";
+    std::filesystem::create_directory(alignedImagesDir);
+
     alignImages(bestImages, alignedImagesDir);
 
     return 0;
