@@ -2,13 +2,14 @@
 module;
 
 #include <algorithm>
+#include <filesystem>
 #include <numeric>
 #include <vector>
 #include <ranges>
 #include <string>
 #include <opencv2/opencv.hpp>
 
-export module frames_picker;
+export module images_picker;
 
 
 namespace
@@ -64,7 +65,7 @@ namespace
 }
 
 
-export std::vector<std::string> pickImages(const std::vector<std::string>& images)
+export std::vector<std::filesystem::path> pickImages(const std::vector<std::filesystem::path>& images)
 {
     std::vector<std::pair<double, int>> score;
 

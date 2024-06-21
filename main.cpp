@@ -2,8 +2,9 @@
 #include <iostream>
 #include <filesystem>
 
+import images_aligner;
+import images_picker;
 import frame_extractor;
-import frames_picker;
 
 
 int main(int argc, char** argv)
@@ -14,12 +15,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const std::string_view input_file = argv[1];
-    const std::string_view wd = argv[2];
+    const std::filesystem::path input_file = argv[1];
+    const std::filesystem::path wd = argv[2];
 
     std::filesystem::create_directory(wd);
 
-    const std::string extractedFramesDir = std::string(wd) + "/images";
+    const std::filesystem::path extractedFramesDir = wd / "images";
     std::filesystem::create_directory(extractedFramesDir);
 
     const auto images = extractFrames(input_file, extractedFramesDir);
@@ -28,6 +29,9 @@ int main(int argc, char** argv)
     std::cout << "\nPicked images (" << bestImages.size() << "):\n";
     for(const auto& bestImage: bestImages)
         std::cout << bestImage << "\n";
+
+    const std::filesystem::path alignedImagesDir = wd / "aligned";
+    alignImages(bestImages, alignedImagesDir);
 
     return 0;
 }

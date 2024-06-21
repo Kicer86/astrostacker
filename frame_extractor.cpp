@@ -2,7 +2,7 @@
 module;
 
 #include <chrono>
-#include <string_view>
+#include <filesystem>
 #include <opencv2/opencv.hpp>
 #include <omp.h>
 
@@ -15,9 +15,9 @@ namespace
         return (lhs + rhs - 1) / rhs;
     }
 
-    int videoFrames(std::string_view file)
+    int videoFrames(const std::filesystem::path& file)
     {
-        cv::VideoCapture video(std::string(file), cv::CAP_FFMPEG);
+        cv::VideoCapture video(file, cv::CAP_FFMPEG);
 
         if (video.isOpened())
         {
@@ -28,7 +28,7 @@ namespace
             return 0;
     }
 
-    std::vector<std::string> extractFrames(std::string_view file, std::string_view dir, int firstFrame, int lastFrame)
+    std::vector<std::string> extractFrames(const std::filesystem::path& file, const std::filesystem::path& dir, int firstFrame, int lastFrame)
     {
         const auto count = lastFrame - firstFrame;
         std::vector<std::string> paths;
@@ -44,7 +44,7 @@ namespace
                 cv::Mat frameMat;
                 video >> frameMat;
 
-                const std::string path = std::format("{}/{}.tiff", dir, frame);
+                const std::string path = std::format("{}/{}.tiff", dir.native(), frame);
                 cv::imwrite(path, frameMat);
                 paths.push_back(path);
             }
@@ -54,7 +54,7 @@ namespace
     }
 }
 
-export std::vector<std::string> extractFrames(std::string_view file, std::string_view dir)
+export std::vector<std::filesystem::path> extractFrames(const std::filesystem::path& file, const std::filesystem::path& dir)
 {
     const auto total_start = std::chrono::high_resolution_clock::now();
     const auto frames = videoFrames(file);
@@ -62,7 +62,7 @@ export std::vector<std::string> extractFrames(std::string_view file, std::string
     if (frames == 0)
         return {};
 
-    std::vector<std::string> paths;
+    std::vector<std::filesystem::path> paths;
 
     #pragma omp parallel
     {
