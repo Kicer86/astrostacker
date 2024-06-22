@@ -10,24 +10,41 @@ export module images_aligner;
 
 namespace
 {
-    cv::Rect commonPart(cv::Rect2f commonPart, const std::vector<cv::Mat>& transformations)
+    cv::Rect calculateCrop(const cv::Rect& imageSize, const std::vector<cv::Mat>& transformations)
     {
+        cv::Rect2f cropSum = imageSize;
+
         for(const auto& transformation: transformations)
         {
+            cv::Rect2f cropped = imageSize;
+
             if (transformation.at<float>(0, 2) < 0)
-                commonPart.x = transformation.at<float>(0, 2) * -1;
+            {
+                cropped.x = transformation.at<float>(0, 2) * -1;
+                cropped.width -= cropped.x;
+            }
 
             if (transformation.at<float>(0, 2) > 0)
-                commonPart.width -= transformation.at<float>(0, 2);
+                cropped.width -= transformation.at<float>(0, 2);
 
             if (transformation.at<float>(1, 2) < 0)
-                commonPart.y = transformation.at<float>(1, 2) * -1;
+            {
+                cropped.y = transformation.at<float>(1, 2) * -1;
+                cropped.height -= cropped.y;
+            }
 
             if (transformation.at<float>(1, 2) > 0)
-                commonPart.height -= transformation.at<float>(1, 2);
+                cropped.height -= transformation.at<float>(1, 2);
+
+            cropSum &= cropped;
         }
 
-        return commonPart;
+        cropSum.x = std::ceil(cropSum.x);
+        cropSum.y = std::ceil(cropSum.y);
+        cropSum.width = std::floor(cropSum.width);
+        cropSum.height = std::floor(cropSum.height);
+
+        return cropSum;
     }
 
     auto findTransformation(const cv::Mat& referenceImageGray, const cv::Mat& imageGray)
@@ -92,7 +109,7 @@ export void alignImages(const std::vector<std::filesystem::path>& images, const 
     const auto& first = images.front();
     const auto referenceImage = cv::imread(first);
     const cv::Rect firstImageSize(0, 0, referenceImage.size().width, referenceImage.size().height);
-    const auto targetRect = commonPart(firstImageSize, transformations);
+    const auto targetRect = calculateCrop(firstImageSize, transformations);
 
     #pragma omp parallel for
     for (int i = 0; i < images.size(); i++)
