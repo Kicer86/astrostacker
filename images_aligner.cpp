@@ -102,7 +102,7 @@ namespace
 }
 
 
-export void alignImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
+export std::vector<std::filesystem::path> alignImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
 {
     const auto transformations = calculateTransformations(images);
 
@@ -110,9 +110,13 @@ export void alignImages(const std::vector<std::filesystem::path>& images, const 
     const auto referenceImage = cv::imread(first);
     const cv::Rect firstImageSize(0, 0, referenceImage.size().width, referenceImage.size().height);
     const auto targetRect = calculateCrop(firstImageSize, transformations);
+    const auto imagesCount = images.size();
+
+    std::vector<std::filesystem::path> alignedImages;
+    alignedImages.resize(imagesCount);
 
     #pragma omp parallel for
-    for (int i = 0; i < images.size(); i++)
+    for (int i = 0; i < imagesCount; i++)
     {
         // read image
         const auto image = cv::imread(images[i]);
@@ -128,7 +132,11 @@ export void alignImages(const std::vector<std::filesystem::path>& images, const 
         const auto croppedNextImg = imageAligned(targetRect);
 
         // save
-        const std::string path = std::format("{}/{}.tiff", dir.native(), i);
+        const auto path = dir /  std::format("{}.tiff", i);
         cv::imwrite(path, croppedNextImg);
+
+        alignedImages[i] = path;
     }
+
+    return alignedImages;
 }

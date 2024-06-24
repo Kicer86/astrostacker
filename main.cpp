@@ -2,9 +2,10 @@
 #include <iostream>
 #include <filesystem>
 
+import frame_extractor;
 import images_aligner;
 import images_picker;
-import frame_extractor;
+import images_stacker;
 
 
 int main(int argc, char** argv)
@@ -33,7 +34,7 @@ int main(int argc, char** argv)
     const std::filesystem::path alignedImagesDir = wd / "aligned";
     std::filesystem::create_directory(alignedImagesDir);
 
-    alignImages(bestImages, alignedImagesDir);
+    const auto alignedImages = alignImages(bestImages, alignedImagesDir);
 
     return 0;
 }
