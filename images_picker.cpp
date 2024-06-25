@@ -36,13 +36,13 @@ namespace
     double calculateMean(const std::vector<double>& data)
     {
         const double sum = std::accumulate(data.begin(), data.end(), 0.0);
-        return sum / data.size();
+        return sum / static_cast<double>(data.size());
     }
 
     double calculateStdDev(const std::vector<double>& data, double mean)
     {
         const double sq_sum = std::inner_product(data.begin(), data.end(), data.begin(), 0.0);
-        return std::sqrt(sq_sum / data.size() - mean * mean);
+        return std::sqrt(sq_sum / static_cast<double>(data.size()) - mean * mean);
     }
 
     std::vector<int> selectTopImagesZScores(const std::vector<std::pair<double, int>>& images, double threshold = 1.0) {
@@ -69,7 +69,7 @@ export std::vector<std::filesystem::path> pickImages(const std::vector<std::file
 {
     std::vector<std::pair<double, int>> score;
 
-    const int count = images.size();
+    const int count = static_cast<int>(images.size());
     score.resize(count);
 
     #pragma omp parallel for
