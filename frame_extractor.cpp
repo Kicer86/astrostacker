@@ -22,7 +22,7 @@ namespace
         if (video.isOpened())
         {
             const auto frames = video.get(cv::CAP_PROP_FRAME_COUNT);
-            return frames;
+            return static_cast<int>(frames);
         }
         else
             return 0;
@@ -31,6 +31,11 @@ namespace
     std::vector<std::string> extractFrames(const std::filesystem::path& file, const std::filesystem::path& dir, int firstFrame, int lastFrame)
     {
         const auto count = lastFrame - firstFrame;
+        if (count == 0)
+            return {};
+
+        assert(count > 0 );
+
         std::vector<std::string> paths;
         paths.reserve(count);
 
@@ -80,7 +85,7 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
         }
         #pragma omp barrier
 
-        const auto firstFrame = group_size * thread;
+        const auto firstFrame = std::min(frames, group_size * thread);
         const auto lastFrame = std::min(frames, firstFrame + group_size);
         const auto thread_paths = extractFrames(file, dir, firstFrame, lastFrame);
 
