@@ -36,5 +36,10 @@ int main(int argc, char** argv)
 
     const auto alignedImages = alignImages(bestImages, alignedImagesDir);
 
+    const std::filesystem::path stackedImagesDir = wd / "stacked";
+    std::filesystem::create_directory(stackedImagesDir);
+
+    stackImages(alignedImages, stackedImagesDir);
+
     return 0;
 }

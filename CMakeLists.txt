@@ -25,6 +25,7 @@ target_sources(astro-stacker
       frame_extractor.cpp
       images_aligner.cpp
       images_picker.cpp
+      images_stacker.cpp
 )
 
 target_link_libraries(astro-stacker

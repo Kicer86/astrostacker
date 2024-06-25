@@ -1,0 +1,84 @@
+
+module;
+
+#include <algorithm>
+#include <filesystem>
+#include <vector>
+#include <opencv2/opencv.hpp>
+
+export module images_stacker;
+
+
+namespace
+{
+    cv::Mat averageStacking(const std::vector<std::filesystem::path>& images)
+    {
+        const cv::Mat firstImage = cv::imread(images.front());
+
+        cv::Mat cumulative = cv::Mat::zeros(firstImage.size(), CV_64FC3);
+
+        for (const auto& imagePath: images)
+        {
+            const cv::Mat image = cv::imread(imagePath);
+
+            cv::Mat imageFloat;
+            image.convertTo(imageFloat, CV_64FC3);
+
+            cumulative += imageFloat;
+        }
+
+        cumulative /= static_cast<double>(images.size());
+
+        cv::Mat result;
+        cumulative.convertTo(result, firstImage.type());
+
+        return result;
+    }
+
+
+    cv::Mat medianStacking(const std::vector<std::filesystem::path>& images)
+    {
+        const cv::Mat firstImage = cv::imread(images.front());
+        std::vector<std::vector<cv::Vec3b>> pixels(firstImage.rows * firstImage.cols);
+
+        // Collect pixel values
+        for (const auto& imagePath: images)
+        {
+            const cv::Mat image = cv::imread(imagePath);
+            for (int y = 0; y < image.rows; ++y)
+                for (int x = 0; x < image.cols; ++x)
+                    pixels[y * image.cols + x].push_back(image.at<cv::Vec3b>(y, x));
+        }
+
+        // Create the result image
+        cv::Mat result(firstImage.size(), firstImage.type());
+
+        // Compute the median for each pixel
+        for (int y = 0; y < result.rows; ++y)
+            for (int x = 0; x < result.cols; ++x)
+            {
+                std::vector<cv::Vec3b>& px = pixels[y * result.cols + x];
+                std::sort(px.begin(), px.end(), [](const cv::Vec3b& a, const cv::Vec3b& b)
+                {
+                    return cv::norm(a) < cv::norm(b);
+                });
+                result.at<cv::Vec3b>(y, x) = px[px.size() / 2];
+            }
+
+        return result;
+    }
+}
+
+
+export void stackImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
+{
+    const auto averageImg = averageStacking(images);
+
+    const auto pathAvg = dir / "average.tiff";
+    cv::imwrite(pathAvg, averageImg);
+
+    const auto medianImg = medianStacking(images);
+
+    const auto pathMdn = dir / "median.tiff";
+    cv::imwrite(pathMdn, medianImg);
+}
