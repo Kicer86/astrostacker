@@ -45,13 +45,13 @@ namespace
         return std::sqrt(sq_sum / static_cast<double>(data.size()) - mean * mean);
     }
 
-    std::vector<int> selectTopImagesZScores(const std::vector<std::pair<double, int>>& images, double threshold = 1.0) {
+    std::vector<size_t> selectTopImagesZScores(const std::vector<std::pair<double, size_t>>& images, double threshold = 1.0) {
         std::vector<double> scores;
-        std::ranges::transform(images, std::back_inserter(scores), [](const std::pair<double, int> score) {return score.first;});
+        std::ranges::transform(images, std::back_inserter(scores), [](const std::pair<double, size_t> score) {return score.first;});
 
         double mean = calculateMean(scores);
         double stdDev = calculateStdDev(scores, mean);
-        std::vector<int> topImages;
+        std::vector<size_t> topImages;
 
         for (const auto& image: images)
         {
@@ -67,13 +67,13 @@ namespace
 
 export std::vector<std::filesystem::path> pickImages(const std::vector<std::filesystem::path>& images)
 {
-    std::vector<std::pair<double, int>> score;
+    std::vector<std::pair<double, size_t>> score;
 
-    const int count = static_cast<int>(images.size());
+    const size_t count = images.size();
     score.resize(count);
 
     #pragma omp parallel for
-    for(int i = 0; i < count; i++)
+    for(size_t i = 0; i < count; i++)
     {
         const cv::Mat image = cv::imread(images[i]);
         const double s = computeSharpness(image);

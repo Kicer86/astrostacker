@@ -10,41 +10,42 @@ export module frame_extractor;
 
 namespace
 {
-    int divideWithRoundUp(int lhs, int rhs)
+    size_t divideWithRoundUp(size_t lhs, size_t rhs)
     {
         return (lhs + rhs - 1) / rhs;
     }
 
-    int videoFrames(const std::filesystem::path& file)
+    size_t videoFrames(const std::filesystem::path& file)
     {
         cv::VideoCapture video(file, cv::CAP_FFMPEG);
 
         if (video.isOpened())
         {
             const auto frames = video.get(cv::CAP_PROP_FRAME_COUNT);
-            return static_cast<int>(frames);
+            assert(frames >= 0);
+            return static_cast<size_t>(frames);
         }
         else
             return 0;
     }
 
-    std::vector<std::string> extractFrames(const std::filesystem::path& file, const std::filesystem::path& dir, int firstFrame, int lastFrame)
+    std::vector<std::string> extractFrames(const std::filesystem::path& file, const std::filesystem::path& dir, size_t firstFrame, size_t lastFrame)
     {
+        assert(lastFrame >= firstFrame);
+
         const auto count = lastFrame - firstFrame;
         if (count == 0)
             return {};
 
-        assert(count > 0 );
-
         std::vector<std::string> paths;
-        paths.reserve(count);
+        paths.reserve(static_cast<size_t>(count));
 
         cv::VideoCapture video(std::string(file), cv::CAP_FFMPEG);
         if (video.isOpened())
         {
-            video.set(cv::CAP_PROP_POS_FRAMES, firstFrame);
+            video.set(cv::CAP_PROP_POS_FRAMES, static_cast<double>(firstFrame));
 
-            for(int frame = firstFrame; frame < lastFrame; frame++)
+            for(size_t frame = firstFrame; frame < lastFrame; frame++)
             {
                 cv::Mat frameMat;
                 video >> frameMat;
@@ -71,8 +72,8 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
 
     #pragma omp parallel
     {
-        const auto threads = omp_get_num_threads();
-        const auto thread = omp_get_thread_num();
+        const auto threads = static_cast<size_t>(omp_get_num_threads());
+        const auto thread = static_cast<size_t>(omp_get_thread_num());
         const auto group_size = divideWithRoundUp(frames, threads);
 
         // Thread * frames-to-process-by-each-thread needs to be at least equal to number of frames
@@ -80,7 +81,7 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
 
         #pragma omp master
         {
-            paths.resize(frames);
+            paths.resize(static_cast<size_t>(frames));
             std::cout << "Starting extraction of " << frames << " frames with " << threads << " threads. Group size: " << group_size << "\n";
         }
         #pragma omp barrier
@@ -89,7 +90,7 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
         const auto lastFrame = std::min(frames, firstFrame + group_size);
         const auto thread_paths = extractFrames(file, dir, firstFrame, lastFrame);
 
-        for(int out_f = firstFrame, in_f = 0; out_f < lastFrame; out_f++, in_f++)
+        for(size_t out_f = firstFrame, in_f = 0; out_f < lastFrame; out_f++, in_f++)
             paths[out_f] = thread_paths[in_f];
     }
 

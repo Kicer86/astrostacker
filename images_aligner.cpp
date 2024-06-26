@@ -80,11 +80,11 @@ namespace
             return mat;
         }());  // insert empty transformation matrix for first image
 
-        const int imagesCount = static_cast<int>(images.size());
+        const auto imagesCount = images.size();
         transformations.resize(imagesCount);
 
         #pragma omp parallel for
-        for (int i = 1; i < imagesCount; i++)
+        for (size_t i = 1; i < imagesCount; i++)
         {
             const auto& next = images[i];
             const auto image = cv::imread(next);
@@ -116,7 +116,7 @@ export std::vector<std::filesystem::path> alignImages(const std::vector<std::fil
     alignedImages.resize(imagesCount);
 
     #pragma omp parallel for
-    for (int i = 0; i < imagesCount; i++)
+    for (size_t i = 0; i < imagesCount; i++)
     {
         // read image
         const auto image = cv::imread(images[i]);
