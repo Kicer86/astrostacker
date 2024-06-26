@@ -6,6 +6,7 @@ import frame_extractor;
 import images_aligner;
 import images_picker;
 import images_stacker;
+import object_localizer;
 
 
 int main(int argc, char** argv)
@@ -25,7 +26,12 @@ int main(int argc, char** argv)
     std::filesystem::create_directory(extractedFramesDir);
 
     const auto images = extractFrames(input_file, extractedFramesDir);
-    const auto bestImages = pickImages(images);
+
+    const std::filesystem::path objectDir = wd / "object";
+    std::filesystem::create_directory(objectDir);
+    const auto objects = extractObject(images, objectDir);
+
+    const auto bestImages = pickImages(objects);
 
     const std::filesystem::path alignedImagesDir = wd / "aligned";
     std::filesystem::create_directory(alignedImagesDir);
