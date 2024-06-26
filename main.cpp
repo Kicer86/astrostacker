@@ -9,6 +9,18 @@ import images_stacker;
 import object_localizer;
 
 
+namespace
+{
+    std::filesystem::path makeSubDir(const std::filesystem::path& wd, std::string_view subdir)
+    {
+        const std::filesystem::path path = wd / subdir;
+        std::filesystem::create_directory(path);
+
+        return path;
+    }
+}
+
+
 int main(int argc, char** argv)
 {
     if (argc != 3)
@@ -22,25 +34,18 @@ int main(int argc, char** argv)
 
     std::filesystem::create_directory(wd);
 
-    const std::filesystem::path extractedFramesDir = wd / "images";
-    std::filesystem::create_directory(extractedFramesDir);
-
+    const auto extractedFramesDir = makeSubDir(wd, "images");
     const auto images = extractFrames(input_file, extractedFramesDir);
 
-    const std::filesystem::path objectDir = wd / "object";
-    std::filesystem::create_directory(objectDir);
+    const auto objectDir = makeSubDir(wd, "object");
     const auto objects = extractObject(images, objectDir);
 
     const auto bestImages = pickImages(objects);
 
-    const std::filesystem::path alignedImagesDir = wd / "aligned";
-    std::filesystem::create_directory(alignedImagesDir);
-
+    const auto alignedImagesDir = makeSubDir(wd, "aligned");
     const auto alignedImages = alignImages(bestImages, alignedImagesDir);
 
-    const std::filesystem::path stackedImagesDir = wd / "stacked";
-    std::filesystem::create_directory(stackedImagesDir);
-
+    const auto stackedImagesDir = makeSubDir(wd, "stacked");
     stackImages(alignedImages, stackedImagesDir);
 
     return 0;
