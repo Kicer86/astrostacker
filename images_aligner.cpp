@@ -41,8 +41,8 @@ namespace
 
         cropSum.x = std::ceil(cropSum.x);
         cropSum.y = std::ceil(cropSum.y);
-        cropSum.width = std::floor(cropSum.width);
-        cropSum.height = std::floor(cropSum.height);
+        cropSum.width = std::floor(cropSum.width) - 1;
+        cropSum.height = std::floor(cropSum.height) - 1;
 
         return cropSum;
     }
