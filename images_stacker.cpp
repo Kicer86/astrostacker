@@ -35,25 +35,27 @@ namespace
         return result;
     }
 
-
+    /*
     cv::Mat medianStacking(const std::vector<std::filesystem::path>& images)
     {
         const cv::Mat firstImage = cv::imread(images.front());
-        std::vector<std::vector<cv::Vec3b>> pixels(firstImage.rows * firstImage.cols);
+        const auto imagesCount = images.size();
+        std::vector<cv::Vec3b> pixels(imagesCount * firstImage.rows * firstImage.cols);
 
         // Collect pixel values
-        for (const auto& imagePath: images)
+        #pragma omp parallel for
+        for (std::size_t i = 0; i < imagesCount; i++)
         {
-            const cv::Mat image = cv::imread(imagePath);
+            const cv::Mat image = cv::imread(images[i]);
             for (int y = 0; y < image.rows; ++y)
                 for (int x = 0; x < image.cols; ++x)
-                    pixels[y * image.cols + x].push_back(image.at<cv::Vec3b>(y, x));
+                    pixels[i * image.rows * image.cols + y * image.cols + x] = image.at<cv::Vec3b>(y, x);
         }
 
-        // Create the result image
         cv::Mat result(firstImage.size(), firstImage.type());
 
         // Compute the median for each pixel
+        #pragma omp parallel for collapse(2)
         for (int y = 0; y < result.rows; ++y)
             for (int x = 0; x < result.cols; ++x)
             {
@@ -67,6 +69,7 @@ namespace
 
         return result;
     }
+    */
 }
 
 
@@ -77,8 +80,8 @@ export void stackImages(const std::vector<std::filesystem::path>& images, const 
     const auto pathAvg = dir / "average.tiff";
     cv::imwrite(pathAvg, averageImg);
 
-    const auto medianImg = medianStacking(images);
+    //const auto medianImg = medianStacking(images);
 
-    const auto pathMdn = dir / "median.tiff";
-    cv::imwrite(pathMdn, medianImg);
+    //const auto pathMdn = dir / "median.tiff";
+    //cv::imwrite(pathMdn, medianImg);
 }
