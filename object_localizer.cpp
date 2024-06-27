@@ -68,14 +68,20 @@ export std::vector<std::filesystem::path> extractObject(const std::vector<std::f
     const auto imagesCount = images.size();
     extractedObjects.resize(imagesCount);
 
+    const auto contoursDir = dir / "contours";
+    const auto objectsDir = dir / "objects";
+
+    std::filesystem::create_directory(contoursDir);
+    std::filesystem::create_directory(objectsDir);
+
     #pragma omp parallel for
     for(size_t i = 0; i < imagesCount; i++)
     {
         const cv::Mat image = cv::imread(images[i]);
         const auto [object, contours] = findBrightestObject(image);
 
-        const auto objectPath = dir / std::format("o_{}.tiff", i);
-        const auto contoursPath = dir / std::format("c_{}.tiff", i);
+        const auto objectPath = objectsDir / std::format("{}.tiff", i);
+        const auto contoursPath = contoursDir / std::format("{}.tiff", i);
         cv::imwrite(objectPath, object);
         cv::imwrite(contoursPath, contours);
 
