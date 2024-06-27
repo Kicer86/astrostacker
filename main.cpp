@@ -4,6 +4,7 @@
 
 import frame_extractor;
 import images_aligner;
+import images_enhancer;
 import images_picker;
 import images_stacker;
 import object_localizer;
@@ -46,7 +47,10 @@ int main(int argc, char** argv)
     const auto alignedImages = alignImages(bestImages, alignedImagesDir);
 
     const auto stackedImagesDir = makeSubDir(wd, "stacked");
-    stackImages(alignedImages, stackedImagesDir);
+    const auto stackedImages = stackImages(alignedImages, stackedImagesDir);
+
+    const auto enahncedImagesDir = makeSubDir(wd, "enhanced");
+    enhanceImages(stackedImages, enahncedImagesDir);
 
     return 0;
 }

@@ -24,6 +24,7 @@ target_sources(astro-stacker
     FILE_SET CXX_MODULES FILES
       frame_extractor.cpp
       images_aligner.cpp
+      images_enhancer.cpp
       images_picker.cpp
       images_stacker.cpp
       object_localizer.cpp
@@ -33,5 +34,6 @@ target_link_libraries(astro-stacker
     PRIVATE
         opencv_tracking
         opencv_videoio
+        opencv_photo
         OpenMP::OpenMP_CXX
 )
