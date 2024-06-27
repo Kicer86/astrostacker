@@ -2,6 +2,7 @@
 module;
 
 #include <filesystem>
+#include <limits>
 #include <vector>
 #include <opencv2/opencv.hpp>
 
@@ -41,8 +42,8 @@ namespace
 
         cropSum.x = std::ceil(cropSum.x);
         cropSum.y = std::ceil(cropSum.y);
-        cropSum.width = std::floor(cropSum.width) - 1;
-        cropSum.height = std::floor(cropSum.height) - 1;
+        cropSum.width = std::floor(cropSum.width);
+        cropSum.height = std::floor(cropSum.height);
 
         return cropSum;
     }
@@ -59,12 +60,13 @@ namespace
         return warp_matrix;
     }
 
-    std::vector<cv::Mat> calculateTransformations(const std::vector<std::filesystem::path>& images)
+    std::pair<std::vector<cv::Mat>, cv::Size> calculateTransformations(const std::vector<std::filesystem::path>& images)
     {
         const cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
 
         const auto& first = images.front();
         const auto referenceImage = cv::imread(first);
+        cv::Size minimalSize = referenceImage.size();
 
         cv::Mat referenceImageGray;
         cv::cvtColor(referenceImage, referenceImageGray, cv::COLOR_RGB2GRAY);
@@ -95,20 +97,26 @@ namespace
             const auto transformation = findTransformation(referenceImageGray, imageGray);
 
             transformations[i] = transformation;
+
+            #pragma omp critical
+            {
+                minimalSize.width = std::min(minimalSize.width, image.size().width);
+                minimalSize.height = std::min(minimalSize.height, image.size().height);
+            }
         }
 
-        return transformations;
+        return {transformations, minimalSize};
     }
 }
 
 
 export std::vector<std::filesystem::path> alignImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
 {
-    const auto transformations = calculateTransformations(images);
+    const auto [transformations, minimalSize] = calculateTransformations(images);
 
     const auto& first = images.front();
     const auto referenceImage = cv::imread(first);
-    const cv::Rect firstImageSize(0, 0, referenceImage.size().width, referenceImage.size().height);
+    const cv::Rect firstImageSize(0, 0, minimalSize.width, minimalSize.height);
     const auto targetRect = calculateCrop(firstImageSize, transformations);
     const auto imagesCount = images.size();
 
