@@ -73,7 +73,7 @@ namespace
 }
 
 
-export void stackImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
+export std::vector<std::filesystem::path> stackImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
 {
     const auto averageImg = averageStacking(images);
 
@@ -84,4 +84,6 @@ export void stackImages(const std::vector<std::filesystem::path>& images, const 
 
     //const auto pathMdn = dir / "median.tiff";
     //cv::imwrite(pathMdn, medianImg);
+
+    return {pathAvg};
 }
