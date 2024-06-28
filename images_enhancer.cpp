@@ -8,6 +8,7 @@ module;
 #include <opencv2/photo.hpp>
 
 export module images_enhancer;
+import utils;
 
 
 namespace
@@ -64,26 +65,18 @@ namespace
 
 export std::vector<std::filesystem::path> enhanceImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
 {
-    const auto imagesCount = images.size();
-    std::vector<std::filesystem::path> result;
-    result.resize(imagesCount);
-
-    for(size_t i = 0; i < imagesCount; i++)
+    const auto result = processImages(images, dir, [] (const cv::Mat& image)
     {
         cv::Mat psf = cv::getGaussianKernel(21, 5, CV_32F);
         psf = psf * psf.t();
 
-        const cv::Mat image = cv::imread(images[i]);
         const cv::Mat deconvolvedImage = richardsonLucyDeconvolution(image, psf, 10);
         const cv::Mat contrastEnhancedImage = enhanceContrast(deconvolvedImage);
         const cv::Mat denoisedImage = reduceNoise(contrastEnhancedImage);
-        const cv::Mat sharpenedImage = sharpenImage(deconvolvedImage);
+        const cv::Mat sharpenedImage = sharpenImage(contrastEnhancedImage);
 
-        const auto path = dir / std::format("{}.tiff", i);
-        cv::imwrite(path, sharpenedImage);
-
-        result[i] = path;
-    }
+        return sharpenedImage;
+    });
 
     return result;
 }
