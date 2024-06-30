@@ -7,31 +7,29 @@ module;
 
 export module utils;
 
-namespace
+
+class Timer
 {
-    class Timer
-    {
-        public:
-            Timer(): start_time(std::chrono::high_resolution_clock::now()) {}
+    public:
+        Timer(): start_time(std::chrono::high_resolution_clock::now()) {}
 
-            double stop()
-            {
-                auto end_time = std::chrono::high_resolution_clock::now();
-                return std::chrono::duration<double, std::milli>(end_time - start_time).count();
-            }
+        double stop()
+        {
+            auto end_time = std::chrono::high_resolution_clock::now();
+            return std::chrono::duration<double, std::milli>(end_time - start_time).count();
+        }
 
-        private:
-            std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
-    };
+    private:
+        std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
+};
 
-    template <typename Func, typename... Args>
-    auto measureTime(Func func, Args&&... args)
-    {
-        Timer timer;
-        auto result = func(std::forward<Args>(args)...);
-        double elapsed_time = timer.stop();
-        return std::make_pair(elapsed_time, result);
-    }
+template<typename Func, typename... Args>
+auto measureTime(Func func, Args&&... args)
+{
+    Timer timer;
+    auto result = func(std::forward<Args>(args)...);
+    double elapsed_time = timer.stop();
+    return std::make_pair(elapsed_time, result);
 }
 
 
