@@ -82,7 +82,6 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
         #pragma omp master
         {
             paths.resize(static_cast<size_t>(frames));
-            std::cout << "Starting extraction of " << frames << " frames with " << threads << " threads. Group size: " << group_size << "\n";
         }
         #pragma omp barrier
 
@@ -97,8 +96,6 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
     const auto total_stop = std::chrono::high_resolution_clock::now();
     const auto duration = total_stop - total_start;
     const auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
-
-    std::cout << "Total time: " << duration_ms.count() << "ms" << std::endl;
 
     return paths;
 }
