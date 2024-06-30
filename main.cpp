@@ -8,6 +8,7 @@ import images_enhancer;
 import images_picker;
 import images_stacker;
 import object_localizer;
+import utils;
 
 
 namespace
@@ -36,21 +37,21 @@ int main(int argc, char** argv)
     std::filesystem::create_directory(wd);
 
     const auto extractedFramesDir = makeSubDir(wd, "images");
-    const auto images = extractFrames(input_file, extractedFramesDir);
+    const auto images = measureTimeWithMessage("Extracting frames from video.", extractFrames, input_file, extractedFramesDir);
 
     const auto objectDir = makeSubDir(wd, "object");
-    const auto objects = extractObject(images, objectDir);
+    const auto objects =  measureTimeWithMessage("Extracting main object.", extractObject, images, objectDir);
 
-    const auto bestImages = pickImages(objects);
+    const auto bestImages = measureTimeWithMessage("Choosing best images.", pickImages, objects);
 
     const auto alignedImagesDir = makeSubDir(wd, "aligned");
-    const auto alignedImages = alignImages(bestImages, alignedImagesDir);
+    const auto alignedImages = measureTimeWithMessage("Aligning images.", alignImages, bestImages, alignedImagesDir);
 
     const auto stackedImagesDir = makeSubDir(wd, "stacked");
-    const auto stackedImages = stackImages(alignedImages, stackedImagesDir);
+    const auto stackedImages = measureTimeWithMessage("Stacking images.", stackImages, alignedImages, stackedImagesDir);
 
     const auto enahncedImagesDir = makeSubDir(wd, "enhanced");
-    enhanceImages(stackedImages, enahncedImagesDir);
+    measureTimeWithMessage("Enhancing images.", enhanceImages, stackedImages, enahncedImagesDir);
 
     return 0;
 }
