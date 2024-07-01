@@ -38,6 +38,11 @@ jobs:
       with:
         submodules: true
 
+    - name: Run vcpkg
+      uses: lukka/run-vcpkg@v11.5
+      with:
+        vcpkgJsonGlob: vcpkg.json
+
     - name: Configure CMake
       run: >
         cmake --preset "ninja_release_vcpkg"
