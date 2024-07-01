@@ -52,9 +52,9 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
     std::vector<std::filesystem::path> resultPaths(imagesCount);
 
     #pragma omp parallel for
-    for(size_t i = 0; i < imagesCount; i++)
+    for(int i = 0; i < imagesCount; i++)
     {
-        const cv::Mat image = cv::imread(images[i]);
+        const cv::Mat image = cv::imread(images[i].string());
 
         std::array<cv::Mat, N>  results;
         if constexpr (N == 1)
@@ -70,7 +70,7 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
             const auto dir = dirs[j];
 
             const auto path = dir / std::format("{}.tiff", i);
-            cv::imwrite(path, result);
+            cv::imwrite(path.string(), result);
 
             if (!firstPath)
                 firstPath = path;

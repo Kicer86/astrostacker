@@ -16,7 +16,7 @@ namespace
 
     size_t videoFrames(const std::filesystem::path& file)
     {
-        cv::VideoCapture video(file, cv::CAP_FFMPEG);
+        cv::VideoCapture video(file.string(), cv::CAP_FFMPEG);
 
         if (video.isOpened())
         {
@@ -39,7 +39,7 @@ namespace
         std::vector<std::string> paths;
         paths.reserve(static_cast<size_t>(count));
 
-        cv::VideoCapture video(std::string(file), cv::CAP_FFMPEG);
+        cv::VideoCapture video(file.string(), cv::CAP_FFMPEG);
         if (video.isOpened())
         {
             video.set(cv::CAP_PROP_POS_FRAMES, static_cast<double>(firstFrame));
@@ -49,7 +49,7 @@ namespace
                 cv::Mat frameMat;
                 video >> frameMat;
 
-                const std::string path = std::format("{}/{}.tiff", dir.native(), frame);
+                const std::string path = std::format("{}/{}.tiff", dir.string(), frame);
                 cv::imwrite(path, frameMat);
                 paths.push_back(path);
             }

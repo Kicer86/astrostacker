@@ -73,9 +73,9 @@ export std::vector<std::filesystem::path> pickImages(const std::vector<std::file
     score.resize(count);
 
     #pragma omp parallel for
-    for(size_t i = 0; i < count; i++)
+    for(int i = 0; i < count; i++)
     {
-        const cv::Mat image = cv::imread(images[i]);
+        const cv::Mat image = cv::imread(images[i].string());
         const double s = computeSharpness(image);
         const double c = computeContrast(image);
 

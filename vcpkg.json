@@ -1,0 +1,14 @@
+{
+  "name": "astrostacker",
+  "version-string": "1.0.0",
+  "port-version": 1,
+  "homepage": "https://github.com/Kicer86/astrostacker",
+  "description": "Tool astrophotography image stacking.",
+  "dependencies": [
+    {
+      "name": "opencv4",
+      "default-features": false,
+      "features": [ "contrib" ]
+    }
+  ]
+}
