@@ -38,6 +38,8 @@ jobs:
       with:
         submodules: true
 
+    - uses: seanmiddleditch/gha-setup-ninja@master
+
     - name: Run vcpkg
       uses: lukka/run-vcpkg@v11.5
       with:
