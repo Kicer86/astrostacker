@@ -1,7 +1,6 @@
 
 module;
 
-#include <chrono>
 #include <filesystem>
 #include <opencv2/opencv.hpp>
 #include <omp.h>
@@ -62,7 +61,6 @@ namespace
 
 export std::vector<std::filesystem::path> extractFrames(const std::filesystem::path& file, const std::filesystem::path& dir)
 {
-    const auto total_start = std::chrono::high_resolution_clock::now();
     const auto frames = videoFrames(file);
 
     if (frames == 0)
@@ -92,10 +90,6 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
         for(size_t out_f = firstFrame, in_f = 0; out_f < lastFrame; out_f++, in_f++)
             paths[out_f] = thread_paths[in_f];
     }
-
-    const auto total_stop = std::chrono::high_resolution_clock::now();
-    const auto duration = total_stop - total_start;
-    const auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(duration);
 
     return paths;
 }
