@@ -44,6 +44,17 @@ auto measureTimeWithMessage(std::string_view startMessage, Func func, Args&&... 
 }
 
 
+export template<typename T, typename C>
+void forEach(T items, C&& c)
+{
+    const int size = static_cast<int>(items.size());
+
+    #pragma omp parallel for                        // visual studio requires int for loops
+    for(int i = 0; i < size; i++)
+        c(static_cast<size_t>(i));
+}
+
+
 export template<typename T, std::size_t N>
 requires std::invocable<T, const cv::Mat &> && (N > 0)
 std::vector<std::filesystem::path> processImages(const std::vector<std::filesystem::path>& images, const std::array<std::filesystem::path, N>& dirs, T&& op)
@@ -51,8 +62,7 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
     const auto imagesCount = images.size();
     std::vector<std::filesystem::path> resultPaths(imagesCount);
 
-    #pragma omp parallel for
-    for(int i = 0; i < imagesCount; i++)
+    forEach(images, [&](const size_t i)
     {
         const cv::Mat image = cv::imread(images[i].string());
 
@@ -77,7 +87,7 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
         }
 
         resultPaths[i] = firstPath.value();
-    }
+    });
 
     return resultPaths;
 }
