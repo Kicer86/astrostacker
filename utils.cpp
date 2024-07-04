@@ -46,7 +46,7 @@ auto measureTimeWithMessage(std::string_view startMessage, Func func, Args&&... 
 
 export template<typename T, std::size_t N>
 requires std::invocable<T, const cv::Mat &>
-std::vector<std::filesystem::path> processImages(const std::vector<std::filesystem::path>& images, std::array<std::filesystem::path, N> dirs, T&& op)
+std::vector<std::filesystem::path> processImages(const std::vector<std::filesystem::path>& images, const std::array<std::filesystem::path, N>& dirs, T&& op)
 {
     const auto imagesCount = images.size();
     std::vector<std::filesystem::path> resultPaths(imagesCount);
