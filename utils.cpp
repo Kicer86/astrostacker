@@ -49,7 +49,7 @@ void forEach(T items, C&& c)
 {
     const int size = static_cast<int>(items.size());
 
-    #pragma omp parallel for                        // visual studio requires int for loops
+    #pragma omp parallel for                        // TODO: visual studio requires int for loops, clean this up in the future
     for(int i = 0; i < size; i++)
         c(static_cast<size_t>(i));
 }
