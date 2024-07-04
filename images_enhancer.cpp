@@ -65,7 +65,7 @@ namespace
 
 export std::vector<std::filesystem::path> enhanceImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
 {
-    const auto result = processImages(images, dir, [] (const cv::Mat& image)
+    const auto result = processImages(images, dir, [](const cv::Mat& image)
     {
         cv::Mat psf = cv::getGaussianKernel(21, 5, CV_32F);
         psf = psf * psf.t();

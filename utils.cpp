@@ -3,6 +3,7 @@ module;
 
 #include <concepts>
 #include <filesystem>
+#include <span>
 #include <opencv2/opencv.hpp>
 
 export module utils;
@@ -33,9 +34,19 @@ auto measureTime(Func func, Args&&... args)
 }
 
 
-export template<typename T>
+export template <typename Func, typename... Args>
+auto measureTimeWithMessage(std::string_view startMessage, Func func, Args&&... args)
+{
+    std::cout << startMessage << std::flush;
+    auto [time, result] = measureTime(func, std::forward<Args>(args)...);
+    std::cout << " Execution time: " << time << " ms" << std::endl;
+    return result;
+}
+
+
+export template<typename T, std::size_t N>
 requires std::invocable<T, const cv::Mat &>
-std::vector<std::filesystem::path> processImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir, T&& op)
+std::vector<std::filesystem::path> processImages(const std::vector<std::filesystem::path>& images, std::array<std::filesystem::path, N> dirs, T&& op)
 {
     const auto imagesCount = images.size();
     std::vector<std::filesystem::path> resultPaths(imagesCount);
@@ -44,23 +55,37 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
     for(size_t i = 0; i < imagesCount; i++)
     {
         const cv::Mat image = cv::imread(images[i]);
-        const auto result = op(image);
 
-        const auto path = dir / std::format("{}.tiff", i);
-        cv::imwrite(path, result);
+        std::array<cv::Mat, N>  results;
+        if constexpr (N == 1)
+            results[0] = op(image);
+        else
+            results = op(image);
 
-        resultPaths[i] = path;
+        std::optional<std::filesystem::path> firstPath;
+        // TODO: use std::views::zip when possible
+        for (size_t j = 0; j < results.size(); j++)
+        {
+            const auto result = results[j];
+            const auto dir = dirs[j];
+
+            const auto path = dir / std::format("{}.tiff", i);
+            cv::imwrite(path, result);
+
+            if (!firstPath)
+                firstPath = path;
+        }
+
+        resultPaths[i] = firstPath.value();
     }
 
     return resultPaths;
 }
 
 
-export template <typename Func, typename... Args>
-auto measureTimeWithMessage(std::string_view startMessage, Func func, Args&&... args)
+export template<typename T>
+requires std::invocable<T, const cv::Mat &>
+std::vector<std::filesystem::path> processImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir, T&& op)
 {
-    std::cout << startMessage << std::flush;
-    auto [time, result] = measureTime(func, std::forward<Args>(args)...);
-    std::cout << " Execution time: " << time << " ms" << std::endl;
-    return result;
+    return processImages(images, std::array{dir}, op);
 }

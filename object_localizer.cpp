@@ -7,6 +7,9 @@ module;
 
 export module object_localizer;
 
+import utils;
+
+
 namespace
 {
     std::pair<cv::Mat, cv::Mat> findBrightestObject(const cv::Mat& img)
@@ -64,29 +67,18 @@ namespace
 
 export std::vector<std::filesystem::path> extractObject(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
 {
-    std::vector<std::filesystem::path> extractedObjects;
-    const auto imagesCount = images.size();
-    extractedObjects.resize(imagesCount);
-
     const auto contoursDir = dir / "contours";
     const auto objectsDir = dir / "objects";
 
     std::filesystem::create_directory(contoursDir);
     std::filesystem::create_directory(objectsDir);
 
-    #pragma omp parallel for
-    for(size_t i = 0; i < imagesCount; i++)
+    const auto extractedObjects = processImages(images, std::array{objectsDir, contoursDir}, [](const cv::Mat& image)
     {
-        const cv::Mat image = cv::imread(images[i]);
         const auto [object, contours] = findBrightestObject(image);
 
-        const auto objectPath = objectsDir / std::format("{}.tiff", i);
-        const auto contoursPath = contoursDir / std::format("{}.tiff", i);
-        cv::imwrite(objectPath, object);
-        cv::imwrite(contoursPath, contours);
-
-        extractedObjects[i] = objectPath;
-    }
+        return std::array{object, contours};
+    });
 
     return extractedObjects;
 }
