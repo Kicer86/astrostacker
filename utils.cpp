@@ -3,6 +3,7 @@ module;
 
 #include <concepts>
 #include <filesystem>
+#include <format>
 #include <span>
 #include <opencv2/opencv.hpp>
 

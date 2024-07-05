@@ -2,6 +2,7 @@
 module;
 
 #include <filesystem>
+#include <format>
 #include <limits>
 #include <vector>
 #include <opencv2/opencv.hpp>

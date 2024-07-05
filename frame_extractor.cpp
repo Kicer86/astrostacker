@@ -2,6 +2,7 @@
 module;
 
 #include <filesystem>
+#include <format>
 #include <opencv2/opencv.hpp>
 #include <omp.h>
 
