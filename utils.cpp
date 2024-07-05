@@ -3,6 +3,7 @@ module;
 
 #include <concepts>
 #include <filesystem>
+#include <format>
 #include <span>
 #include <opencv2/opencv.hpp>
 
@@ -44,6 +45,17 @@ auto measureTimeWithMessage(std::string_view startMessage, Func func, Args&&... 
 }
 
 
+export template<typename T, typename C>
+void forEach(T items, C&& c)
+{
+    const int size = static_cast<int>(items.size());
+
+    #pragma omp parallel for                        // TODO: visual studio requires int for loops, clean this up in the future
+    for(int i = 0; i < size; i++)
+        c(static_cast<size_t>(i));
+}
+
+
 export template<typename T, std::size_t N>
 requires std::invocable<T, const cv::Mat &> && (N > 0)
 std::vector<std::filesystem::path> processImages(const std::vector<std::filesystem::path>& images, const std::array<std::filesystem::path, N>& dirs, T&& op)
@@ -51,10 +63,9 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
     const auto imagesCount = images.size();
     std::vector<std::filesystem::path> resultPaths(imagesCount);
 
-    #pragma omp parallel for
-    for(size_t i = 0; i < imagesCount; i++)
+    forEach(images, [&](const size_t i)
     {
-        const cv::Mat image = cv::imread(images[i]);
+        const cv::Mat image = cv::imread(images[i].string());
 
         std::array<cv::Mat, N>  results;
         if constexpr (N == 1)
@@ -70,14 +81,14 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
             const auto dir = dirs[j];
 
             const auto path = dir / std::format("{}.tiff", i);
-            cv::imwrite(path, result);
+            cv::imwrite(path.string(), result);
 
             if (!firstPath)
                 firstPath = path;
         }
 
         resultPaths[i] = firstPath.value();
-    }
+    });
 
     return resultPaths;
 }

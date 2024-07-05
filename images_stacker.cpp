@@ -3,6 +3,7 @@ module;
 
 #include <algorithm>
 #include <filesystem>
+#include <span>
 #include <vector>
 #include <opencv2/opencv.hpp>
 
@@ -13,13 +14,13 @@ namespace
 {
     cv::Mat averageStacking(const std::vector<std::filesystem::path>& images)
     {
-        const cv::Mat firstImage = cv::imread(images.front());
+        const cv::Mat firstImage = cv::imread(images.front().string());
 
         cv::Mat cumulative = cv::Mat::zeros(firstImage.size(), CV_64FC3);
 
         for (const auto& imagePath: images)
         {
-            const cv::Mat image = cv::imread(imagePath);
+            const cv::Mat image = cv::imread(imagePath.string());
 
             cv::Mat imageFloat;
             image.convertTo(imageFloat, CV_64FC3);
@@ -39,15 +40,15 @@ namespace
     cv::Mat medianStacking(const std::vector<std::filesystem::path>& images)
     {
         // TODO: rewrite with std::mdspan
-        const cv::Mat firstImage = cv::imread(images.front());
+        const cv::Mat firstImage = cv::imread(images.front().string());
         const auto imagesCount = images.size();
         std::vector<cv::Vec3b> pixels(imagesCount * firstImage.rows * firstImage.cols);
 
         // Collect pixel values
         #pragma omp parallel for
-        for (std::size_t i = 0; i < imagesCount; i++)
+        for (int i = 0; i < imagesCount; i++)
         {
-            const cv::Mat image = cv::imread(images[i]);
+            const cv::Mat image = cv::imread(images[i].string());
             for (int y = 0; y < image.rows; ++y)
                 for (int x = 0; x < image.cols; ++x)
                     pixels[y * image.cols * imagesCount + x * imagesCount + i] = image.at<cv::Vec3b>(y, x);
@@ -78,12 +79,12 @@ export std::vector<std::filesystem::path> stackImages(const std::vector<std::fil
     const auto averageImg = averageStacking(images);
 
     const auto pathAvg = dir / "average.tiff";
-    cv::imwrite(pathAvg, averageImg);
+    cv::imwrite(pathAvg.string(), averageImg);
 
     const auto medianImg = medianStacking(images);
 
     const auto pathMdn = dir / "median.tiff";
-    cv::imwrite(pathMdn, medianImg);
+    cv::imwrite(pathMdn.string(), medianImg);
 
     return {pathAvg, pathMdn};
 }

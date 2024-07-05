@@ -11,6 +11,8 @@ module;
 
 export module images_picker;
 
+import utils;
+
 
 namespace
 {
@@ -72,15 +74,14 @@ export std::vector<std::filesystem::path> pickImages(const std::vector<std::file
     const size_t count = images.size();
     score.resize(count);
 
-    #pragma omp parallel for
-    for(size_t i = 0; i < count; i++)
+    forEach(images, [&](const size_t i)
     {
-        const cv::Mat image = cv::imread(images[i]);
+        const cv::Mat image = cv::imread(images[i].string());
         const double s = computeSharpness(image);
         const double c = computeContrast(image);
 
         score[i] = {s * c, i};
-    }
+    });
 
     auto cmp = [](const auto& lhs, const auto& rhs)
     {

@@ -2,6 +2,7 @@
 module;
 
 #include <filesystem>
+#include <format>
 #include <limits>
 #include <vector>
 #include <opencv2/opencv.hpp>
@@ -65,7 +66,7 @@ namespace
         const cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
 
         const auto& first = images.front();
-        const auto referenceImage = cv::imread(first);
+        const auto referenceImage = cv::imread(first.string());
         cv::Size minimalSize = referenceImage.size();
 
         cv::Mat referenceImageGray;
@@ -86,10 +87,10 @@ namespace
         transformations.resize(imagesCount);
 
         #pragma omp parallel for
-        for (size_t i = 1; i < imagesCount; i++)
+        for (int i = 1; i < imagesCount; i++)
         {
             const auto& next = images[i];
-            const auto image = cv::imread(next);
+            const auto image = cv::imread(next.string());
 
             cv::Mat imageGray;
             cv::cvtColor(image, imageGray, cv::COLOR_RGB2GRAY);
@@ -118,7 +119,7 @@ export std::vector<std::filesystem::path> alignImages(const std::vector<std::fil
     const auto minimalSize = transformationsAndSize.second;
 
     const auto& first = images.front();
-    const auto referenceImage = cv::imread(first);
+    const auto referenceImage = cv::imread(first.string());
     const cv::Rect firstImageSize(0, 0, minimalSize.width, minimalSize.height);
     const auto targetRect = calculateCrop(firstImageSize, transformations);
     const auto imagesCount = images.size();
@@ -127,10 +128,10 @@ export std::vector<std::filesystem::path> alignImages(const std::vector<std::fil
     alignedImages.resize(imagesCount);
 
     #pragma omp parallel for
-    for (size_t i = 0; i < imagesCount; i++)
+    for (int i = 0; i < imagesCount; i++)
     {
         // read image
-        const auto image = cv::imread(images[i]);
+        const auto image = cv::imread(images[i].string());
 
         // align
         cv::Mat imageAligned;
@@ -144,7 +145,7 @@ export std::vector<std::filesystem::path> alignImages(const std::vector<std::fil
 
         // save
         const auto path = dir /  std::format("{}.tiff", i);
-        cv::imwrite(path, croppedNextImg);
+        cv::imwrite(path.string(), croppedNextImg);
 
         alignedImages[i] = path;
     }
