@@ -8,6 +8,7 @@ import images_enhancer;
 import images_picker;
 import images_stacker;
 import object_localizer;
+import similar_images_picker;
 import utils;
 
 
@@ -47,8 +48,11 @@ int main(int argc, char** argv)
     const auto alignedImagesDir = makeSubDir(wd, "aligned");
     const auto alignedImages = measureTimeWithMessage("Aligning images.", alignImages, bestImages, alignedImagesDir);
 
+    const auto similarImagesDir = makeSubDir(wd, "similar");
+    const auto mostSimilarImages =  measureTimeWithMessage("Picking most similar images.", pickSimilarImages, alignedImages, similarImagesDir);
+
     const auto stackedImagesDir = makeSubDir(wd, "stacked");
-    const auto stackedImages = measureTimeWithMessage("Stacking images.", stackImages, alignedImages, stackedImagesDir);
+    const auto stackedImages = measureTimeWithMessage("Stacking images.", stackImages, mostSimilarImages, stackedImagesDir);
 
     const auto enahncedImagesDir = makeSubDir(wd, "enhanced");
     measureTimeWithMessage("Enhancing images.", enhanceImages, stackedImages, enahncedImagesDir);
