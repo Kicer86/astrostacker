@@ -28,13 +28,15 @@ target_sources(astro-stacker
       images_picker.cpp
       images_stacker.cpp
       object_localizer.cpp
+      similar_images_picker.cpp
       utils.cpp
 )
 
 target_link_libraries(astro-stacker
     PRIVATE
+        opencv_photo
+        opencv_quality
         opencv_tracking
         opencv_videoio
-        opencv_photo
         OpenMP::OpenMP_CXX
 )
