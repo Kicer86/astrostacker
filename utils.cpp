@@ -4,6 +4,7 @@ module;
 #include <concepts>
 #include <filesystem>
 #include <format>
+#include <ranges>
 #include <span>
 #include <opencv2/opencv.hpp>
 
@@ -74,12 +75,8 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
             results = op(image);
 
         std::optional<std::filesystem::path> firstPath;
-        // TODO: use std::views::zip when possible
-        for (size_t j = 0; j < results.size(); j++)
+        for (const auto [result, dir]: std::views::zip(results, dirs))
         {
-            const auto result = results[j];
-            const auto dir = dirs[j];
-
             const auto path = dir / std::format("{}.tiff", i);
             cv::imwrite(path.string(), result);
 
