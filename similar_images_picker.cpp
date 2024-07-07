@@ -5,21 +5,11 @@ module;
 #include <ranges>
 #include <span>
 
+#include <mlpack/methods/dbscan/dbscan.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/quality.hpp>
 
 export module similar_images_picker;
-
-struct Edge
-{
-    size_t u, v;
-    double weight;
-
-    bool operator<(const Edge& other) const
-    {
-        return weight < other.weight;
-    }
-};
 
 
 double computeSSIM(const cv::Mat& img1, const cv::Mat& img2)
@@ -27,32 +17,15 @@ double computeSSIM(const cv::Mat& img1, const cv::Mat& img2)
     return cv::quality::QualitySSIM::compute(img1, img2, cv::noArray())[0];
 }
 
-
-size_t findParent(size_t i, std::vector<int>& parent)
+cv::Mat similarityToDistanceMatrix(const cv::Mat& similarityMatrix)
 {
-    if (parent[i] == i)
-        return i;
-    else
-        return parent[i] = findParent(parent[i], parent);
-}
+    cv::Mat distanceMatrix = cv::Mat::zeros(similarityMatrix.size(), CV_64F);
 
+    for (int i = 0; i < similarityMatrix.rows; ++i)
+        for (int j = 0; j < similarityMatrix.cols; ++j)
+            distanceMatrix.at<double>(i, j) = 1.0 - similarityMatrix.at<double>(i, j);
 
-void unionSets(int i, int j, std::vector<int>& parent, std::vector<int>& rank) {
-    const auto root1 = findParent(i, parent);
-    const auto root2 = findParent(j, parent);
-
-    if (root1 != root2)
-    {
-        if (rank[root1] > rank[root2])
-            parent[root2] = root1;
-        else if (rank[root1] < rank[root2])
-            parent[root1] = root2;
-        else
-        {
-            parent[root2] = root1;
-            rank[root1]++;
-        }
-    }
+    return distanceMatrix;
 }
 
 
@@ -70,64 +43,47 @@ export std::vector<std::filesystem::path> pickSimilarImages(const std::span<cons
     const std::vector<cv::Mat> grayImages(grayImagesRange.begin(), grayImagesRange.end());
 
     const auto imagesCount = images.size();
-    std::vector<std::vector<double>> ssimScores(imagesCount, std::vector<double>(imagesCount, 0));
-    std::vector<double> allSsimScores;
-    allSsimScores.reserve(imagesCount * imagesCount / 2);
+    cv::Mat similarityMatrix = cv::Mat::zeros(imagesCount, imagesCount, CV_64F);
 
     //#pragma omp parallel for
-    for (size_t i = 0; i < grayImages.size(); ++i) {
-        for (size_t j = i + 1; j < grayImages.size(); ++j) {
+    for (size_t i = 0; i < grayImages.size(); ++i)
+        for (size_t j = i + 1; j < grayImages.size(); ++j)
+        {
             const double ssim = computeSSIM(grayImages[i], grayImages[j]);
-            ssimScores[i][j] = ssim;
-            ssimScores[j][i] = ssim;
-            allSsimScores.push_back(ssim);
+            similarityMatrix.at<double>(i, j) = ssim;
+            similarityMatrix.at<double>(j, i) = ssim;
         }
-    }
 
-    std::sort(allSsimScores.begin(), allSsimScores.end());
+    // Convert similarity matrix to distance matrix
+    cv::Mat distanceMatrix = similarityToDistanceMatrix(similarityMatrix);
 
-    std::priority_queue<Edge> edges;
-    for (size_t i = 0; i < ssimScores.size(); ++i)
-        for (size_t j = i + 1; j < ssimScores[i].size(); ++j)
-            edges.emplace(i, j, ssimScores[i][j]);
+    // Convert distance matrix to Armadillo matrix for mlpack
+    arma::mat distances(distanceMatrix.ptr<double>(), distanceMatrix.rows, distanceMatrix.cols, false, true);
 
-    // Initialize union-find structures
-    std::vector<int> parent(images.size()), rank(images.size(), 0);
-    for (size_t i = 0; i < images.size(); ++i)
-        parent[i] = i;
-
-    // Agglomerative clustering
-    const double threshold = allSsimScores[allSsimScores.size() / 2];
-    while (!edges.empty() && edges.top().weight > threshold)
-    {
-        Edge e = edges.top();
-        edges.pop();
-        unionSets(e.u, e.v, parent, rank);
-    }
-
-    // Group images by their root parent
-    std::map<int, std::vector<int>> clusters;
-    for (size_t i = 0; i < parent.size(); ++i)
-    {
-        int root = findParent(i, parent);
-        clusters[root].push_back(i);
-    }
+    // Run DBSCAN clustering
+    arma::Row<size_t> assignments;
+    mlpack::DBSCAN<> dbscan(0.2, 3); // Adjust parameters as needed
+    dbscan.Cluster(distances, assignments);
 
     // Find the largest cluster
-    std::vector<int> largestCluster;
-    for (const auto& cluster : clusters)
-        if (cluster.second.size() > largestCluster.size())
-            largestCluster = cluster.second;
+    std::map<size_t, int> clusterSizes;
+    for (size_t i = 0; i < assignments.n_elem; ++i)
+        clusterSizes[assignments[i]]++;
 
-    // Output the largest cluster
-    std::vector<std::filesystem::path> mostSimilar;
-    std::cout << "Largest cluster size: " << largestCluster.size() << std::endl;
-    for (int index : largestCluster)
-    {
-        std::cout << "Image: " << images[index] << std::endl;
-        mostSimilar.push_back(images[index]);
-    }
+    size_t largestCluster = std::max_element(clusterSizes.begin(), clusterSizes.end(),
+                                             [](const std::pair<size_t, int>& p1, const std::pair<size_t, int>& p2)
+                                             {
+                                                 return p1.second < p2.second;
+                                             })->first;
 
-    return mostSimilar;
+    // Extract frames belonging to the largest cluster
+    std::vector<std::filesystem::path> goodFrames;
+    for (size_t i = 0; i < assignments.n_elem; ++i)
+        if (assignments[i] == largestCluster)
+            goodFrames.push_back(images[i]);
+
+    std::cout << "Number of good frames: " << goodFrames.size() << std::endl;
+
+    return goodFrames;
 }
 
