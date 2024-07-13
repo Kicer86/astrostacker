@@ -15,8 +15,10 @@ namespace
 {
     std::filesystem::path makeSubDir(const std::filesystem::path& wd, std::string_view subdir)
     {
-        const std::filesystem::path path = wd / subdir;
+        static int c = 0;
+        const std::filesystem::path path = wd / std::format("#{} {}", c, subdir);
         std::filesystem::create_directory(path);
+        c++;
 
         return path;
     }
