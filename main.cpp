@@ -53,7 +53,8 @@ int main(int argc, char** argv)
     const auto objectDir = makeSubDir(wd, "object");
     const auto objects =  measureTimeWithMessage("Extracting main object.", extractObject, images, objectDir);
 
-    const auto bestImages = measureTimeWithMessage("Choosing best images.", pickImages, objects);
+    const auto bestImagesDir = makeSubDir(wd, "best");
+    const auto bestImages = measureTimeWithMessage("Choosing best images.", pickImages, objects, bestImagesDir);
 
     const auto alignedImagesDir = makeSubDir(wd, "aligned");
     const auto alignedImages = measureTimeWithMessage("Aligning images.", alignImages, bestImages, alignedImagesDir);
