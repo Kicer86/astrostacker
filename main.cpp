@@ -20,6 +20,17 @@ namespace
 
         return path;
     }
+
+    std::string getCurrentTime()
+    {
+        const std::time_t now = std::time(nullptr);
+        const std::tm *ptm = std::localtime(&now);
+
+        std::ostringstream oss;
+        oss << std::put_time(ptm, "%Y%m%d-%H%M%S");
+
+        return oss.str();
+    }
 }
 
 
@@ -32,7 +43,7 @@ int main(int argc, char** argv)
     }
 
     const std::filesystem::path input_file = argv[1];
-    const std::filesystem::path wd = argv[2];
+    const std::filesystem::path wd = std::filesystem::path(argv[2]) / getCurrentTime();
 
     std::filesystem::create_directory(wd);
 
