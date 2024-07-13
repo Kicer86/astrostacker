@@ -5,7 +5,6 @@ module;
 #include <ranges>
 #include <span>
 
-#include <mlpack/methods/dbscan/dbscan.hpp>
 #include <opencv2/opencv.hpp>
 #include <opencv2/quality.hpp>
 
@@ -54,36 +53,28 @@ export std::vector<std::filesystem::path> pickSimilarImages(const std::span<cons
             similarityMatrix.at<double>(j, i) = ssim;
         }
 
-    // Convert similarity matrix to distance matrix
-    cv::Mat distanceMatrix = similarityToDistanceMatrix(similarityMatrix);
+    std::vector<double> similarities(similarityMatrix.begin<double>(), similarityMatrix.end<double>());
+    std::ranges::sort(similarities);
+    const double limit = similarities[similarities.size() * 7 / 8];
 
-    // Convert distance matrix to Armadillo matrix for mlpack
-    arma::mat distances(distanceMatrix.ptr<double>(), distanceMatrix.rows, distanceMatrix.cols, false, true);
+    std::vector<int> scores(imagesCount);
+    for (int i = 0; i < imagesCount; i++)
+        for (int j = 0; j < imagesCount; j++)
+            scores[i] += similarityMatrix.at<double>(i, j) > limit;
 
-    // Run DBSCAN clustering
-    arma::Row<size_t> assignments;
-    mlpack::DBSCAN<> dbscan(0.2, 3); // Adjust parameters as needed
-    dbscan.Cluster(distances, assignments);
+    const auto best = std::ranges::max_element(scores);
+    const auto pos = std::distance(scores.begin(), best);
 
-    // Find the largest cluster
-    std::map<size_t, int> clusterSizes;
-    for (size_t i = 0; i < assignments.n_elem; ++i)
-        clusterSizes[assignments[i]]++;
+    std::vector<std::filesystem::path> similarImages;
+    for(int i = 0; i < imagesCount; i++)
+        if (similarityMatrix.at<double>(pos, i) > limit)
+        {
+            const auto newFile = dir / std::format("{}.tiff", i);
+            const auto targetPath = std::filesystem::relative(images[i], dir);
+            std::filesystem::create_symlink(targetPath, newFile);
+            similarImages.push_back(newFile);
+        }
 
-    size_t largestCluster = std::max_element(clusterSizes.begin(), clusterSizes.end(),
-                                             [](const std::pair<size_t, int>& p1, const std::pair<size_t, int>& p2)
-                                             {
-                                                 return p1.second < p2.second;
-                                             })->first;
-
-    // Extract frames belonging to the largest cluster
-    std::vector<std::filesystem::path> goodFrames;
-    for (size_t i = 0; i < assignments.n_elem; ++i)
-        if (assignments[i] == largestCluster)
-            goodFrames.push_back(images[i]);
-
-    std::cout << "Number of good frames: " << goodFrames.size() << std::endl;
-
-    return goodFrames;
+    return similarImages;
 }
 

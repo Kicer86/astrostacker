@@ -12,14 +12,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 23)
 
-find_package(PkgConfig)
 find_package(OpenCV REQUIRED)
 find_package(OpenMP REQUIRED)
-
-pkg_search_module(
-  MLPack REQUIRED mlpack
-  IMPORTED_TARGET
-)
 
 add_executable(astro-stacker
     main.cpp
@@ -40,7 +34,6 @@ target_sources(astro-stacker
 
 target_link_libraries(astro-stacker
     PRIVATE
-        PkgConfig::MLPack
         opencv_photo
         opencv_quality
         opencv_tracking
