@@ -97,3 +97,28 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
 {
     return processImages(images, std::array{dir}, op);
 }
+
+
+export void createLink(const std::filesystem::path& from, const std::filesystem::path& to)
+{
+    const auto targetPath = std::filesystem::relative(from, to.parent_path());
+    std::filesystem::create_symlink(targetPath, to);
+}
+
+export std::vector<std::filesystem::path> createLinks(std::span<const std::filesystem::path> from, const std::filesystem::path& to)
+{
+    const auto imagesCount = from.size();
+    std::vector<std::filesystem::path> result;
+    result.reserve(imagesCount);
+
+    for (size_t i = 0; i < imagesCount; i++)
+    {
+        const auto& input = from[i];
+        const auto newPath = to / std::format("{}.png", i);
+        createLink(input, newPath);
+
+        result.push_back(newPath);
+    }
+
+    return result;
+}
