@@ -77,7 +77,7 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
         std::optional<std::filesystem::path> firstPath;
         for (const auto [result, dir]: std::views::zip(results, dirs))
         {
-            const auto path = dir / std::format("{}.tiff", i);
+            const auto path = dir / std::format("{}.png", i);
             cv::imwrite(path.string(), result);
 
             if (!firstPath)
