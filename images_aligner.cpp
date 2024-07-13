@@ -55,8 +55,8 @@ namespace
         const double termination_eps = 5e-5;
         const cv::TermCriteria criteria (cv::TermCriteria::COUNT + cv::TermCriteria::EPS, number_of_iterations, termination_eps);
 
-        cv::Mat warp_matrix = cv::Mat::eye(3, 3, CV_32F);
-        cv::findTransformECC(referenceImageGray, imageGray, warp_matrix, cv::MOTION_HOMOGRAPHY, criteria);
+        cv::Mat warp_matrix = cv::Mat::eye(2, 3, CV_32F);
+        cv::findTransformECC(referenceImageGray, imageGray, warp_matrix, cv::MOTION_TRANSLATION, criteria);
 
         return warp_matrix;
     }
@@ -76,7 +76,7 @@ namespace
 
         // calculate required transformations
         std::vector<cv::Mat> transformations(1, []{
-            cv::Mat mat = cv::Mat::eye(3, 3, CV_32F);
+            cv::Mat mat = cv::Mat::eye(2, 3, CV_32F);
             mat.at<float>(0, 0) = 1.;
             mat.at<float>(1, 1) = 1.;
 
@@ -138,7 +138,7 @@ export std::vector<std::filesystem::path> alignImages(const std::vector<std::fil
         if (i == 0)
             imageAligned = image;  // reference image does not need any transformations
         else
-            cv::warpPerspective(image, imageAligned, transformations[i], image.size(), cv::INTER_LINEAR + cv::WARP_INVERSE_MAP);
+            cv::warpAffine(image, imageAligned, transformations[i], image.size(), cv::INTER_LINEAR + cv::WARP_INVERSE_MAP);
 
         // apply crop
         const auto croppedNextImg = imageAligned(targetRect);
