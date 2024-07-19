@@ -35,39 +35,16 @@ namespace
         return sigma.val[0];
     }
 
-    double calculateMean(const std::vector<double>& data)
-    {
-        const double sum = std::accumulate(data.begin(), data.end(), 0.0);
-        return sum / static_cast<double>(data.size());
-    }
+    std::vector<size_t> selectTop(const std::vector<std::pair<double, size_t>>& images) {
+        std::vector<double> top;
+        std::ranges::transform(images, std::back_inserter(top), [](const std::pair<double, size_t> score) {return score.second;});
 
-    double calculateStdDev(const std::vector<double>& data, double mean)
-    {
-        const double sq_sum = std::inner_product(data.begin(), data.end(), data.begin(), 0.0);
-        return std::sqrt(sq_sum / static_cast<double>(data.size()) - mean * mean);
-    }
-
-    std::vector<size_t> selectTopImagesZScores(const std::vector<std::pair<double, size_t>>& images, double threshold = 1.0) {
-        std::vector<double> scores;
-        std::ranges::transform(images, std::back_inserter(scores), [](const std::pair<double, size_t> score) {return score.first;});
-
-        double mean = calculateMean(scores);
-        double stdDev = calculateStdDev(scores, mean);
-        std::vector<size_t> topImages;
-
-        for (const auto& image: images)
-        {
-            const double zScore = (image.first - mean) / stdDev;
-            if (zScore > threshold)
-                topImages.push_back(image.second);
-        }
-
-        return topImages;
+        return {top.begin(), top.begin() + top.size() / 2};
     }
 }
 
 
-export std::vector<std::filesystem::path> pickImages(const std::vector<std::filesystem::path>& images)
+export std::vector<std::filesystem::path> pickImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
 {
     std::vector<std::pair<double, size_t>> score;
 
@@ -90,8 +67,9 @@ export std::vector<std::filesystem::path> pickImages(const std::vector<std::file
 
     std::sort(score.begin(), score.end(), cmp);
 
-    const auto top = selectTopImagesZScores(score);
+    const auto top = selectTop(score);
     const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
+    const auto topPaths = createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
 
-    return {topImages.begin(), topImages.end()};
+    return topPaths;
 }

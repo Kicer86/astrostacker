@@ -78,12 +78,12 @@ export std::vector<std::filesystem::path> stackImages(const std::vector<std::fil
 {
     const auto averageImg = averageStacking(images);
 
-    const auto pathAvg = dir / "average.tiff";
+    const auto pathAvg = dir / "average.png";
     cv::imwrite(pathAvg.string(), averageImg);
 
     const auto medianImg = medianStacking(images);
 
-    const auto pathMdn = dir / "median.tiff";
+    const auto pathMdn = dir / "median.png";
     cv::imwrite(pathMdn.string(), medianImg);
 
     return {pathAvg, pathMdn};

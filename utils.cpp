@@ -4,6 +4,7 @@ module;
 #include <concepts>
 #include <filesystem>
 #include <format>
+#include <ranges>
 #include <span>
 #include <opencv2/opencv.hpp>
 
@@ -74,13 +75,9 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
             results = op(image);
 
         std::optional<std::filesystem::path> firstPath;
-        // TODO: use std::views::zip when possible
-        for (size_t j = 0; j < results.size(); j++)
+        for (const auto [result, dir]: std::views::zip(results, dirs))
         {
-            const auto result = results[j];
-            const auto dir = dirs[j];
-
-            const auto path = dir / std::format("{}.tiff", i);
+            const auto path = dir / std::format("{}.png", i);
             cv::imwrite(path.string(), result);
 
             if (!firstPath)
@@ -99,4 +96,29 @@ requires std::invocable<T, const cv::Mat &>
 std::vector<std::filesystem::path> processImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir, T&& op)
 {
     return processImages(images, std::array{dir}, op);
+}
+
+
+export void createLink(const std::filesystem::path& from, const std::filesystem::path& to)
+{
+    const auto targetPath = std::filesystem::relative(from, to.parent_path());
+    std::filesystem::create_symlink(targetPath, to);
+}
+
+export std::vector<std::filesystem::path> createLinks(std::span<const std::filesystem::path> from, const std::filesystem::path& to)
+{
+    const auto imagesCount = from.size();
+    std::vector<std::filesystem::path> result;
+    result.reserve(imagesCount);
+
+    for (size_t i = 0; i < imagesCount; i++)
+    {
+        const auto& input = from[i];
+        const auto newPath = to / std::format("{}.png", i);
+        createLink(input, newPath);
+
+        result.push_back(newPath);
+    }
+
+    return result;
 }

@@ -144,7 +144,7 @@ export std::vector<std::filesystem::path> alignImages(const std::vector<std::fil
         const auto croppedNextImg = imageAligned(targetRect);
 
         // save
-        const auto path = dir /  std::format("{}.tiff", i);
+        const auto path = dir /  std::format("{}.png", i);
         cv::imwrite(path.string(), croppedNextImg);
 
         alignedImages[i] = path;

@@ -50,7 +50,7 @@ namespace
                 cv::Mat frameMat;
                 video >> frameMat;
 
-                const std::string path = std::format("{}/{}.tiff", dir.string(), frame);
+                const std::string path = std::format("{}/{}.png", dir.string(), frame);
                 cv::imwrite(path, frameMat);
                 paths.push_back(path);
             }
