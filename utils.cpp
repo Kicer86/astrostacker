@@ -102,7 +102,22 @@ std::vector<std::filesystem::path> processImages(std::span<const std::filesystem
 export void createLink(const std::filesystem::path& from, const std::filesystem::path& to)
 {
     const auto targetPath = std::filesystem::relative(from, to.parent_path());
-    std::filesystem::create_symlink(targetPath, to);
+    try
+    {
+        std::filesystem::create_symlink(targetPath, to);
+    }
+    catch (const std::filesystem::filesystem_error &)
+    {
+        try
+        {
+            std::filesystem::copy_file(from, to);
+        }
+        catch (const std::filesystem::filesystem_error& err)
+        {
+            std::cerr << err.what() << "\n";
+            throw;
+        }
+    }
 }
 
 export std::vector<std::filesystem::path> createLinks(std::span<const std::filesystem::path> from, const std::filesystem::path& to)
