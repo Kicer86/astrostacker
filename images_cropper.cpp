@@ -11,15 +11,15 @@ export module images_cropper;
 import utils;
 
 
-export std::vector<std::filesystem::path> cropImages(std::span<const std::filesystem::path> images, const std::filesystem::path& wd)
+export std::vector<std::filesystem::path> cropImages(std::span<const std::filesystem::path> images, const std::pair<int, int>& crop, const std::filesystem::path& wd)
 {
-    const std::vector<std::filesystem::path> croppedImages = processImages(images, wd, [](const cv::Mat& image)
+    const std::vector<std::filesystem::path> croppedImages = processImages(images, wd, [&crop](const cv::Mat& image)
     {
         const int height = image.rows;
         const int width = image.cols;
 
-        const int cropHeight = std::min(1000, height);
-        const int cropWidth = std::min(1000, width);
+        const int cropWidth = std::min(crop.first, width);
+        const int cropHeight = std::min(crop.second, height);
 
         const int centerX = width / 2;
         const int centerY = height / 2;

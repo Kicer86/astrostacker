@@ -38,18 +38,44 @@ namespace
         return oss.str();
     }
 
-    auto step(std::string_view title, auto op, const auto& input, const std::filesystem::path& wd, std::string_view subdir)
+    std::optional<std::pair<int, int>> readCrop(const boost::program_options::variable_value& cropValue)
     {
-        const auto stepWorkingDir = makeSubDir(wd, subdir);
-        return measureTimeWithMessage(title, op, input, stepWorkingDir);
+        if (cropValue.empty())
+            return {};
+        else
+        {
+            const auto input = cropValue.as<std::string>();
+            const size_t pos = input.find('x');
+            if (pos == std::string::npos)
+                return {};
+
+            const int width = std::stoi(input.substr(0, pos));
+            const int height = std::stoi(input.substr(pos + 1));
+
+            return std::pair{width, height};
+        }
     }
 
-    auto stepIf(bool condition, std::string_view title, auto op, const auto& input, const std::filesystem::path& wd, std::string_view subdir)
+    template<typename First, typename... Rest>
+    const First& getFirst(const First& first, Rest... rest)
+    {
+        return first;
+    }
+
+    template<typename... Args>
+    auto step(std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, Args... input)
+    {
+        const auto stepWorkingDir = makeSubDir(wd, subdir);
+        return measureTimeWithMessage(title, op, std::forward<Args>(input)..., stepWorkingDir);
+    }
+
+    template<typename... Args>
+    auto stepIf(bool condition, std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, Args... inputs)
     {
         if (condition)
-            return step(title, op, input, wd, subdir);
+            return step(title, wd, subdir, op, std::forward<Args>(inputs)...);
         else
-            return input;
+            return getFirst(std::forward<Args>(inputs)...);
     }
 }
 
@@ -62,7 +88,7 @@ int main(int argc, char** argv)
     desc.add_options()
         ("help", "produce help message")
         ("working-dir", po::value<std::string>(), "set working directory")
-        ("crop", "enable crop")
+        ("crop", po::value<std::string>(), "crop images to given size. Example: 1000x800")
         ("input-files", po::value<std::vector<std::string>>(), "input files");
 
     po::variables_map vm;
@@ -90,20 +116,20 @@ int main(int argc, char** argv)
     }
 
     const std::filesystem::path wd_option = vm["working-dir"].as<std::string>();
-    const bool crop = vm.count("crop");
+    const auto crop = readCrop(vm["crop"]);
     const std::vector<std::string> inputFiles = vm["input-files"].as<std::vector<std::string>>();
     const std::filesystem::path input_file = inputFiles[0];
     const std::filesystem::path wd = wd_option / getCurrentTime();
 
     std::filesystem::create_directory(wd);
 
-    const auto images = step("Extracting frames from video.", extractFrames, input_file, wd, "images");
-    const auto objects =  step("Extracting main object.", extractObject, images, wd, "object");
-    const auto cropped = stepIf(crop, "Cropping.", cropImages, objects, wd, "crop");
-    const auto bestImages = step("Choosing best images.", pickImages, cropped, wd, "best");
-    const auto alignedImages = step("Aligning images.", alignImages, bestImages, wd, "aligned");
-    const auto stackedImages = step("Stacking images.", stackImages, alignedImages, wd, "stacked");
-    step("Enhancing images.", enhanceImages, stackedImages, wd, "enhanced");
+    const auto images = step("Extracting frames from video.", wd, "images", extractFrames, input_file);
+    const auto objects =  step("Extracting main object.", wd, "object", extractObject, images);
+    const auto cropped = stepIf(crop.has_value(), "Cropping.", wd, "crop", cropImages, objects, *crop);
+    const auto bestImages = step("Choosing best images.", wd, "best", pickImages, cropped);
+    const auto alignedImages = step("Aligning images.", wd, "aligned", alignImages, bestImages);
+    const auto stackedImages = step("Stacking images.", wd, "stacked", stackImages, alignedImages);
+    step("Enhancing images.", wd, "enhanced", enhanceImages, stackedImages);
 
     return 0;
 }
