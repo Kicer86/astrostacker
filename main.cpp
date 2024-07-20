@@ -56,16 +56,16 @@ namespace
         }
     }
 
-    auto step(std::string_view title, auto op, const auto& input, const std::filesystem::path& wd, std::string_view subdir)
+    auto step(std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, const auto& input)
     {
         const auto stepWorkingDir = makeSubDir(wd, subdir);
         return measureTimeWithMessage(title, op, input, stepWorkingDir);
     }
 
-    auto stepIf(bool condition, std::string_view title, auto op, const auto& input, const std::filesystem::path& wd, std::string_view subdir)
+    auto stepIf(bool condition, std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, const auto& input)
     {
         if (condition)
-            return step(title, op, input, wd, subdir);
+            return step(title, wd, subdir, op, input);
         else
             return input;
     }
@@ -115,13 +115,13 @@ int main(int argc, char** argv)
 
     std::filesystem::create_directory(wd);
 
-    const auto images = step("Extracting frames from video.", extractFrames, input_file, wd, "images");
-    const auto objects =  step("Extracting main object.", extractObject, images, wd, "object");
-    const auto cropped = stepIf(crop.has_value(), "Cropping.", cropImages, objects, wd, "crop");
-    const auto bestImages = step("Choosing best images.", pickImages, cropped, wd, "best");
-    const auto alignedImages = step("Aligning images.", alignImages, bestImages, wd, "aligned");
-    const auto stackedImages = step("Stacking images.", stackImages, alignedImages, wd, "stacked");
-    step("Enhancing images.", enhanceImages, stackedImages, wd, "enhanced");
+    const auto images = step("Extracting frames from video.", wd, "images", extractFrames, input_file);
+    const auto objects =  step("Extracting main object.", wd, "object", extractObject, images);
+    const auto cropped = stepIf(crop.has_value(), "Cropping.", wd, "crop", cropImages, objects);
+    const auto bestImages = step("Choosing best images.", wd, "best", pickImages, cropped);
+    const auto alignedImages = step("Aligning images.", wd, "aligned", alignImages, bestImages);
+    const auto stackedImages = step("Stacking images.", wd, "stacked", stackImages, alignedImages);
+    step("Enhancing images.", wd, "enhanced", enhanceImages, stackedImages);
 
     return 0;
 }
