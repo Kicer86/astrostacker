@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const bool wd_status = std::filesystem::create_directory(wd);
+    const bool wd_status = std::filesystem::create_directories(wd);
 
     if (wd_status == false)
     {
