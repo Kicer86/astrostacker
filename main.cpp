@@ -121,9 +121,27 @@ int main(int argc, char** argv)
     const std::filesystem::path input_file = inputFiles[0];
     const std::filesystem::path wd = wd_option / getCurrentTime();
 
-    std::filesystem::create_directory(wd);
+    if (std::filesystem::exists(input_file) == false)
+    {
+        std::cerr << "Could not open file: " << input_file << "\n";
+        return 1;
+    }
+
+    const bool wd_status = std::filesystem::create_directory(wd);
+
+    if (wd_status == false)
+    {
+        std::cerr << "Could not create working dir: " << wd << "\n";
+        return 1;
+    }
 
     const auto images = step("Extracting frames from video.", wd, "images", extractFrames, input_file);
+    if (images.empty())
+    {
+        std::cerr << "Error reading frames from video file.\n";
+        return 1;
+    }
+
     const auto objects =  step("Extracting main object.", wd, "object", extractObject, images);
     const auto cropped = stepIf(crop.has_value(), "Cropping.", wd, "crop", cropImages, objects, *crop);
     const auto bestImages = step("Choosing best images.", wd, "best", pickImages, cropped);
