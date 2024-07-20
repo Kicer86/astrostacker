@@ -56,18 +56,26 @@ namespace
         }
     }
 
-    auto step(std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, const auto& input)
+    template<typename First, typename... Rest>
+    const First& getFirst(const First& first, Rest... rest)
     {
-        const auto stepWorkingDir = makeSubDir(wd, subdir);
-        return measureTimeWithMessage(title, op, input, stepWorkingDir);
+        return first;
     }
 
-    auto stepIf(bool condition, std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, const auto& input)
+    template<typename... Args>
+    auto step(std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, Args... input)
+    {
+        const auto stepWorkingDir = makeSubDir(wd, subdir);
+        return measureTimeWithMessage(title, op, std::forward<Args>(input)..., stepWorkingDir);
+    }
+
+    template<typename... Args>
+    auto stepIf(bool condition, std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, Args... inputs)
     {
         if (condition)
-            return step(title, wd, subdir, op, input);
+            return step(title, wd, subdir, op, std::forward<Args>(inputs)...);
         else
-            return input;
+            return getFirst(std::forward<Args>(inputs)...);
     }
 }
 
@@ -117,7 +125,7 @@ int main(int argc, char** argv)
 
     const auto images = step("Extracting frames from video.", wd, "images", extractFrames, input_file);
     const auto objects =  step("Extracting main object.", wd, "object", extractObject, images);
-    const auto cropped = stepIf(crop.has_value(), "Cropping.", wd, "crop", cropImages, objects);
+    const auto cropped = stepIf(crop.has_value(), "Cropping.", wd, "crop", cropImages, objects, *crop);
     const auto bestImages = step("Choosing best images.", wd, "best", pickImages, cropped);
     const auto alignedImages = step("Aligning images.", wd, "aligned", alignImages, bestImages);
     const auto stackedImages = step("Stacking images.", wd, "stacked", stackImages, alignedImages);
