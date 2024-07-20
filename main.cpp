@@ -44,7 +44,7 @@ namespace
         return measureTimeWithMessage(title, op, input, stepWorkingDir);
     }
 
-    auto step_if(bool condition, std::string_view title, auto op, const auto& input, const std::filesystem::path& wd, std::string_view subdir)
+    auto stepIf(bool condition, std::string_view title, auto op, const auto& input, const std::filesystem::path& wd, std::string_view subdir)
     {
         if (condition)
             return step(title, op, input, wd, subdir);
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 
     const auto images = step("Extracting frames from video.", extractFrames, input_file, wd, "images");
     const auto objects =  step("Extracting main object.", extractObject, images, wd, "object");
-    const auto cropped = step_if(crop, "Cropping.", cropImages, objects, wd, "crop");
+    const auto cropped = stepIf(crop, "Cropping.", cropImages, objects, wd, "crop");
     const auto bestImages = step("Choosing best images.", pickImages, cropped, wd, "best");
     const auto alignedImages = step("Aligning images.", alignImages, bestImages, wd, "aligned");
     const auto stackedImages = step("Stacking images.", stackImages, alignedImages, wd, "stacked");
