@@ -27,6 +27,7 @@ target_sources(astro-stacker
     FILE_SET CXX_MODULES FILES
       frame_extractor.cpp
       images_aligner.cpp
+      images_cropper.cpp
       images_enhancer.cpp
       images_picker.cpp
       images_stacker.cpp
