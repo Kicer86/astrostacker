@@ -36,6 +36,13 @@ namespace
 
         return oss.str();
     }
+
+    auto step(std::string_view title, auto op, const auto& input, const std::filesystem::path& wd, std::string_view subdir)
+    {
+        const auto stepWorkingDir = makeSubDir(wd, subdir);
+        return measureTimeWithMessage(title, op, input, stepWorkingDir);
+    }
+
 }
 
 
@@ -80,23 +87,12 @@ int main(int argc, char** argv)
 
     std::filesystem::create_directory(wd);
 
-    const auto extractedFramesDir = makeSubDir(wd, "images");
-    const auto images = measureTimeWithMessage("Extracting frames from video.", extractFrames, input_file, extractedFramesDir);
-
-    const auto objectDir = makeSubDir(wd, "object");
-    const auto objects =  measureTimeWithMessage("Extracting main object.", extractObject, images, objectDir);
-
-    const auto bestImagesDir = makeSubDir(wd, "best");
-    const auto bestImages = measureTimeWithMessage("Choosing best images.", pickImages, objects, bestImagesDir);
-
-    const auto alignedImagesDir = makeSubDir(wd, "aligned");
-    const auto alignedImages = measureTimeWithMessage("Aligning images.", alignImages, bestImages, alignedImagesDir);
-
-    const auto stackedImagesDir = makeSubDir(wd, "stacked");
-    const auto stackedImages = measureTimeWithMessage("Stacking images.", stackImages, alignedImages, stackedImagesDir);
-
-    const auto enahncedImagesDir = makeSubDir(wd, "enhanced");
-    measureTimeWithMessage("Enhancing images.", enhanceImages, stackedImages, enahncedImagesDir);
+    const auto images = step("Extracting frames from video.", extractFrames, input_file, wd, "images");
+    const auto objects =  step("Extracting main object.", extractObject, images, wd, "object");
+    const auto bestImages = step("Choosing best images.", pickImages, objects, wd, "best");
+    const auto alignedImages = step("Aligning images.", alignImages, bestImages, wd, "aligned");
+    const auto stackedImages = step("Stacking images.", stackImages, alignedImages, wd, "stacked");
+    step("Enhancing images.", enhanceImages, stackedImages, wd, "enhanced");
 
     return 0;
 }
