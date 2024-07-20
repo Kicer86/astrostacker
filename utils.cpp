@@ -59,7 +59,7 @@ void forEach(T items, C&& c)
 
 export template<typename T, std::size_t N>
 requires std::invocable<T, const cv::Mat &> && (N > 0)
-std::vector<std::filesystem::path> processImages(const std::vector<std::filesystem::path>& images, const std::array<std::filesystem::path, N>& dirs, T&& op)
+std::vector<std::filesystem::path> processImages(std::span<const std::filesystem::path> images, const std::array<std::filesystem::path, N>& dirs, T&& op)
 {
     const auto imagesCount = images.size();
     std::vector<std::filesystem::path> resultPaths(imagesCount);
@@ -93,7 +93,7 @@ std::vector<std::filesystem::path> processImages(const std::vector<std::filesyst
 
 export template<typename T>
 requires std::invocable<T, const cv::Mat &>
-std::vector<std::filesystem::path> processImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir, T&& op)
+std::vector<std::filesystem::path> processImages(std::span<const std::filesystem::path> images, const std::filesystem::path& dir, T&& op)
 {
     return processImages(images, std::array{dir}, op);
 }

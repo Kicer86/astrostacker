@@ -12,6 +12,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 23)
 
+set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+
+find_package(Boost REQUIRED COMPONENTS program_options)
 find_package(OpenCV REQUIRED)
 find_package(OpenMP REQUIRED)
 
@@ -24,6 +27,7 @@ target_sources(astro-stacker
     FILE_SET CXX_MODULES FILES
       frame_extractor.cpp
       images_aligner.cpp
+      images_cropper.cpp
       images_enhancer.cpp
       images_picker.cpp
       images_stacker.cpp
@@ -33,6 +37,7 @@ target_sources(astro-stacker
 
 target_link_libraries(astro-stacker
     PRIVATE
+        Boost::program_options
         opencv_tracking
         opencv_videoio
         opencv_photo
