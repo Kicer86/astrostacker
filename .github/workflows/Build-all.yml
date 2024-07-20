@@ -27,7 +27,8 @@ jobs:
       run: |
         sudo apt-get update &&              \
         sudo apt-get install                \
-            libomp-dev
+            libomp-dev                      \
+            nasm
 
     - name: Run vcpkg
       uses: lukka/run-vcpkg@v11.5
