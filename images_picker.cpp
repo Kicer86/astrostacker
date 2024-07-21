@@ -4,6 +4,7 @@ module;
 #include <algorithm>
 #include <filesystem>
 #include <numeric>
+#include <variant>
 #include <vector>
 #include <ranges>
 #include <string>
@@ -35,11 +36,13 @@ namespace
         return sigma.val[0];
     }
 
-    std::vector<size_t> selectTop(const std::vector<std::pair<double, size_t>>& images) {
-        std::vector<double> top;
+    std::vector<size_t> selectTop(const std::vector<std::pair<double, size_t>>& images, int percent = 50) {
+        std::vector<size_t> top;
         std::ranges::transform(images, std::back_inserter(top), [](const std::pair<double, size_t> score) {return score.second;});
 
-        return {top.begin(), top.begin() + top.size() / 2};
+        const size_t elements = static_cast<size_t>(std::ceil(top.size() * percent / 100.0));
+
+        return {top.begin(), top.begin() + elements};
     }
 }
 
@@ -69,9 +72,22 @@ export std::vector<std::filesystem::path> pickImages(const std::vector<std::file
 
     std::sort(score.begin(), score.end(), cmp);
 
-    const auto top = selectTop(score);
-    const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
-    const auto topPaths = createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
+    if (const auto medianMethod = std::get_if<MedianPicker>(&method))
+    {
+        const auto top = selectTop(score);
+        const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
+        const auto topPaths = createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
 
-    return topPaths;
+        return topPaths;
+    }
+    else if (const auto topMethod = std::get_if<int>(&method))
+    {
+        const auto top = selectTop(score, *topMethod);
+        const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
+        const auto topPaths = createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
+
+        return topPaths;
+    }
+    else
+        return {};
 }

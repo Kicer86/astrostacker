@@ -85,7 +85,6 @@ namespace
             return value;
         else
             return {};
-
     }
 
     template<typename First, typename... Rest>
