@@ -22,7 +22,7 @@ namespace
         if (video.isOpened())
         {
             const auto frames = video.get(cv::CAP_PROP_FRAME_COUNT);
-            
+
             if (frames >= 0)
                 return static_cast<size_t>(frames);
             else
@@ -40,6 +40,8 @@ namespace
         if (count == 0)
             return {};
 
+        const auto fileName = file.filename().string();
+
         std::vector<std::string> paths;
         paths.reserve(static_cast<size_t>(count));
 
@@ -53,7 +55,7 @@ namespace
                 cv::Mat frameMat;
                 video >> frameMat;
 
-                const std::string path = std::format("{}/{}.png", dir.string(), frame);
+                const std::string path = std::format("{}/{}-{}.png", dir.string(), fileName, frame);
                 cv::imwrite(path, frameMat);
                 paths.push_back(path);
             }

@@ -66,7 +66,9 @@ std::vector<std::filesystem::path> processImages(std::span<const std::filesystem
 
     forEach(images, [&](const size_t i)
     {
-        const cv::Mat image = cv::imread(images[i].string());
+        const auto imagePath = images[i];
+        const auto imageFilename = imagePath.filename().string();
+        const cv::Mat image = cv::imread(imagePath.string());
 
         std::array<cv::Mat, N>  results;
         if constexpr (N == 1)
@@ -77,7 +79,7 @@ std::vector<std::filesystem::path> processImages(std::span<const std::filesystem
         std::optional<std::filesystem::path> firstPath;
         for (const auto [result, dir]: std::views::zip(results, dirs))
         {
-            const auto path = dir / std::format("{}.png", i);
+            const auto path = dir / imageFilename;
             cv::imwrite(path.string(), result);
 
             if (!firstPath)
@@ -126,10 +128,10 @@ export std::vector<std::filesystem::path> createLinks(std::span<const std::files
     std::vector<std::filesystem::path> result;
     result.reserve(imagesCount);
 
-    for (size_t i = 0; i < imagesCount; i++)
+    for (const auto& input: from)
     {
-        const auto& input = from[i];
-        const auto newPath = to / std::format("{}.png", i);
+        const auto inputName = input.filename().string();
+        const auto newPath = to / inputName;
         createLink(input, newPath);
 
         result.push_back(newPath);
