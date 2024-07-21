@@ -100,6 +100,7 @@ int main(int argc, char** argv)
         ("working-dir", po::value<std::string>(), "set working directory")
         ("crop", po::value<std::string>(), "crop images to given size. Example: --crop 1000x800")
         ("split", po::value<std::string>(), "Split video into segments. Provide segment lenght and gap in frames as argument. Example: --split 120,40")
+        ("skip", po::value<size_t>()->default_value(0), "Skip n frames from the video begining. Example: --skip 60")
         ("input-files", po::value<std::vector<std::string>>(), "input files");
 
     po::variables_map vm;
@@ -129,6 +130,7 @@ int main(int argc, char** argv)
     const std::filesystem::path wd_option = vm["working-dir"].as<std::string>();
     const auto crop = readCrop(vm["crop"]);
     const auto split = readSegments(vm["split"]);
+    const auto skip = vm["skip"].as<size_t>();
     const std::vector<std::string> inputFiles = vm["input-files"].as<std::vector<std::string>>();
     const std::filesystem::path input_file = inputFiles[0];
     const std::filesystem::path wd = wd_option / getCurrentTime();
@@ -154,7 +156,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const auto imageSegments = split.has_value()? step("Splitting.", wd, "segments", splitImages, images, *split) : std::vector<std::vector<std::filesystem::path>>{images};
+    const std::vector<std::filesystem::path> imagesAfterSkip(images.begin() + skip, images.end());
+
+    const auto imageSegments = split.has_value()? step("Splitting.", wd, "segments", splitImages, imagesAfterSkip, *split) : std::vector<std::vector<std::filesystem::path>>{imagesAfterSkip};
     const auto segments = imageSegments.size();
 
     for (size_t i = 0; i < segments; i++)
