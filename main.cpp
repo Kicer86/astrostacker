@@ -1,6 +1,6 @@
 
-#include <iostream>
 #include <filesystem>
+#include <iostream>
 
 #include <boost/program_options.hpp>
 
@@ -75,6 +75,19 @@ namespace
         }
     }
 
+    std::optional<PickerMethod> readPickerMethod(const boost::program_options::variable_value& pickerMethod)
+    {
+        const auto pickedMethod = pickerMethod.as<std::string>();
+
+        if (pickedMethod == "median")
+            return MedianPicker{};
+        else if (const auto value = std::stoi(pickedMethod); value != 0)
+            return value;
+        else
+            return {};
+
+    }
+
     template<typename First, typename... Rest>
     const First& getFirst(const First& first, Rest... rest)
     {
@@ -102,6 +115,7 @@ int main(int argc, char** argv)
         ("split", po::value<std::string>(), "Split video into segments. Provide segment lenght and gap in frames as argument. Example: --split 120,40")
         ("skip", po::value<size_t>()->default_value(0), "Skip n frames from the video begining. Example: --skip 60")
         ("disable-object-detection", "Disable object detection step")
+        ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: median, number (1-100)")
         ("input-files", po::value<std::vector<std::string>>(), "input files");
 
     po::variables_map vm;
@@ -132,10 +146,18 @@ int main(int argc, char** argv)
     const auto crop = readCrop(vm["crop"]);
     const auto split = readSegments(vm["split"]);
     const auto skip = vm["skip"].as<size_t>();
+    const auto best = vm["use-best"];
     const bool doObjectDetection = vm.count("disable-object-detection") == 0;
     const std::vector<std::string> inputFiles = vm["input-files"].as<std::vector<std::string>>();
     const std::filesystem::path input_file = inputFiles[0];
     const std::filesystem::path wd = wd_option / getCurrentTime();
+    const auto pickerMethod = readPickerMethod(best);
+
+    if (pickerMethod.has_value() == false)
+    {
+        std::cerr << "Invalid value for --use-best argument: " << best.as<std::string>() << ". Expected 'median' or % value 1÷100\n";
+        return 1;
+    }
 
     if (std::filesystem::exists(input_file) == false)
     {
@@ -174,7 +196,7 @@ int main(int argc, char** argv)
 
         const auto objects = doObjectDetection? step("Extracting main object.", segment_wd, "object", extractObject, segmentImages) : segmentImages;
         const auto cropped = crop.has_value()? step("Cropping.", segment_wd, "crop", cropImages, objects, *crop) : objects;
-        const auto bestImages = step("Choosing best images.", segment_wd, "best", pickImages, cropped);
+        const auto bestImages = step("Choosing best images.", segment_wd, "best", pickImages, cropped, *pickerMethod);
         const auto alignedImages = step("Aligning images.", segment_wd, "aligned", alignImages, bestImages);
         const auto stackedImages = step("Stacking images.", segment_wd, "stacked", stackImages, alignedImages);
         step("Enhancing images.", segment_wd, "enhanced", enhanceImages, stackedImages);
