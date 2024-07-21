@@ -130,8 +130,10 @@ export std::vector<std::filesystem::path> alignImages(const std::vector<std::fil
     #pragma omp parallel for
     for (int i = 0; i < imagesCount; i++)
     {
-        // read image
-        const auto image = cv::imread(images[i].string());
+        const auto& imagePath = images[i];
+        const auto imageFilename = imagePath.filename().string();
+
+        const auto image = cv::imread(imagePath.string());
 
         // align
         cv::Mat imageAligned;
@@ -144,7 +146,7 @@ export std::vector<std::filesystem::path> alignImages(const std::vector<std::fil
         const auto croppedNextImg = imageAligned(targetRect);
 
         // save
-        const auto path = dir /  std::format("{}.png", i);
+        const auto path = dir / imageFilename;
         cv::imwrite(path.string(), croppedNextImg);
 
         alignedImages[i] = path;
