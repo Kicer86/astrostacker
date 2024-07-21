@@ -101,6 +101,7 @@ int main(int argc, char** argv)
         ("crop", po::value<std::string>(), "crop images to given size. Example: --crop 1000x800")
         ("split", po::value<std::string>(), "Split video into segments. Provide segment lenght and gap in frames as argument. Example: --split 120,40")
         ("skip", po::value<size_t>()->default_value(0), "Skip n frames from the video begining. Example: --skip 60")
+        ("disable-object-detection", "Disable object detection step")
         ("input-files", po::value<std::vector<std::string>>(), "input files");
 
     po::variables_map vm;
@@ -131,6 +132,7 @@ int main(int argc, char** argv)
     const auto crop = readCrop(vm["crop"]);
     const auto split = readSegments(vm["split"]);
     const auto skip = vm["skip"].as<size_t>();
+    const bool doObjectDetection = vm.count("disable-object-detection") == 0;
     const std::vector<std::string> inputFiles = vm["input-files"].as<std::vector<std::string>>();
     const std::filesystem::path input_file = inputFiles[0];
     const std::filesystem::path wd = wd_option / getCurrentTime();
@@ -170,7 +172,7 @@ int main(int argc, char** argv)
         if (segments > 1)
             std::cout << "Processing segment #" << i + 1 << " of " << segments << "\n";
 
-        const auto objects =  step("Extracting main object.", segment_wd, "object", extractObject, segmentImages);
+        const auto objects = doObjectDetection? step("Extracting main object.", segment_wd, "object", extractObject, segmentImages) : segmentImages;
         const auto cropped = crop.has_value()? step("Cropping.", segment_wd, "crop", cropImages, objects, *crop) : objects;
         const auto bestImages = step("Choosing best images.", segment_wd, "best", pickImages, cropped);
         const auto alignedImages = step("Aligning images.", segment_wd, "aligned", alignImages, bestImages);
