@@ -22,8 +22,11 @@ namespace
         if (video.isOpened())
         {
             const auto frames = video.get(cv::CAP_PROP_FRAME_COUNT);
-            assert(frames >= 0);
-            return static_cast<size_t>(frames);
+            
+            if (frames >= 0)
+                return static_cast<size_t>(frames);
+            else
+                return 0;
         }
         else
             return 0;

@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const bool wd_status = std::filesystem::create_directory(wd);
+    const bool wd_status = std::filesystem::create_directories(wd);
 
     if (wd_status == false)
     {
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
     }
 
     const auto objects =  step("Extracting main object.", wd, "object", extractObject, images);
-    const auto cropped = stepIf(crop.has_value(), "Cropping.", wd, "crop", cropImages, objects, *crop);
+    const auto cropped = stepIf(crop.has_value(), "Cropping.", wd, "crop", cropImages, objects, crop.has_value() ? (*crop) : std::pair<int, int>());
     const auto bestImages = step("Choosing best images.", wd, "best", pickImages, cropped);
     const auto alignedImages = step("Aligning images.", wd, "aligned", alignImages, bestImages);
     const auto stackedImages = step("Stacking images.", wd, "stacked", stackImages, alignedImages);
