@@ -168,7 +168,7 @@ int main(int argc, char** argv)
 
         const auto& segmentImages = imageSegments[i];
         if (segments > 1)
-            std::cout << "Processing segment #" << i + 1 << " out of " << segments << "\n";
+            std::cout << "Processing segment #" << i + 1 << " of " << segments << "\n";
 
         const auto objects =  step("Extracting main object.", segment_wd, "object", extractObject, segmentImages);
         const auto cropped = crop.has_value()? step("Cropping.", segment_wd, "crop", cropImages, objects, *crop) : objects;
