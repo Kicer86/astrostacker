@@ -10,6 +10,7 @@ import images_aligner;
 import images_cropper;
 import images_enhancer;
 import images_picker;
+import images_splitter;
 import images_stacker;
 import object_localizer;
 import utils;
@@ -56,6 +57,24 @@ namespace
         }
     }
 
+    std::optional<std::pair<int, int>> readSegments(const boost::program_options::variable_value& cropValue)
+    {
+        if (cropValue.empty())
+            return {};
+        else
+        {
+            const auto input = cropValue.as<std::string>();
+            const size_t pos = input.find(',');
+            if (pos == std::string::npos)
+                return {};
+
+            const int length = std::stoi(input.substr(0, pos));
+            const int gap = std::stoi(input.substr(pos + 1));
+
+            return std::pair{length, gap};
+        }
+    }
+
     template<typename First, typename... Rest>
     const First& getFirst(const First& first, Rest... rest)
     {
@@ -68,15 +87,6 @@ namespace
         const auto stepWorkingDir = makeSubDir(wd, subdir);
         return measureTimeWithMessage(title, op, std::forward<Args>(input)..., stepWorkingDir);
     }
-
-    template<typename... Args>
-    auto stepIf(bool condition, std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, Args... inputs)
-    {
-        if (condition)
-            return step(title, wd, subdir, op, std::forward<Args>(inputs)...);
-        else
-            return getFirst(std::forward<Args>(inputs)...);
-    }
 }
 
 
@@ -88,7 +98,8 @@ int main(int argc, char** argv)
     desc.add_options()
         ("help", "produce help message")
         ("working-dir", po::value<std::string>(), "set working directory")
-        ("crop", po::value<std::string>(), "crop images to given size. Example: 1000x800")
+        ("crop", po::value<std::string>(), "crop images to given size. Example: --crop 1000x800")
+        ("split", po::value<std::string>(), "Split video into segments. Provide segment lenght and gap in frames as argument. Example: --split 120,40")
         ("input-files", po::value<std::vector<std::string>>(), "input files");
 
     po::variables_map vm;
@@ -117,6 +128,7 @@ int main(int argc, char** argv)
 
     const std::filesystem::path wd_option = vm["working-dir"].as<std::string>();
     const auto crop = readCrop(vm["crop"]);
+    const auto split = readSegments(vm["split"]);
     const std::vector<std::string> inputFiles = vm["input-files"].as<std::vector<std::string>>();
     const std::filesystem::path input_file = inputFiles[0];
     const std::filesystem::path wd = wd_option / getCurrentTime();
@@ -142,12 +154,25 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const auto objects =  step("Extracting main object.", wd, "object", extractObject, images);
-    const auto cropped = stepIf(crop.has_value(), "Cropping.", wd, "crop", cropImages, objects, crop.has_value() ? (*crop) : std::pair<int, int>());
-    const auto bestImages = step("Choosing best images.", wd, "best", pickImages, cropped);
-    const auto alignedImages = step("Aligning images.", wd, "aligned", alignImages, bestImages);
-    const auto stackedImages = step("Stacking images.", wd, "stacked", stackImages, alignedImages);
-    step("Enhancing images.", wd, "enhanced", enhanceImages, stackedImages);
+    const auto imageSegments = split.has_value()? step("Splitting.", wd, "segments", splitImages, images, *split) : std::vector<std::vector<std::filesystem::path>>{images};
+    const auto segments = imageSegments.size();
+
+    for (size_t i = 0; i < segments; i++)
+    {
+        const std::filesystem::path segment_wd = segments == 1? wd : wd / std::to_string(i);
+        std::filesystem::create_directories(segment_wd);
+
+        const auto& segmentImages = imageSegments[i];
+        if (segments > 1)
+            std::cout << "Processing segment #" << i + 1 << " out of " << segments << "\n";
+
+        const auto objects =  step("Extracting main object.", segment_wd, "object", extractObject, segmentImages);
+        const auto cropped = crop.has_value()? step("Cropping.", segment_wd, "crop", cropImages, objects, *crop) : objects;
+        const auto bestImages = step("Choosing best images.", segment_wd, "best", pickImages, cropped);
+        const auto alignedImages = step("Aligning images.", segment_wd, "aligned", alignImages, bestImages);
+        const auto stackedImages = step("Stacking images.", segment_wd, "stacked", stackImages, alignedImages);
+        step("Enhancing images.", segment_wd, "enhanced", enhanceImages, stackedImages);
+    }
 
     return 0;
 }

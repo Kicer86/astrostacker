@@ -30,6 +30,7 @@ target_sources(astro-stacker
       images_cropper.cpp
       images_enhancer.cpp
       images_picker.cpp
+      images_splitter.cpp
       images_stacker.cpp
       object_localizer.cpp
       utils.cpp
