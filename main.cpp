@@ -114,7 +114,7 @@ int main(int argc, char** argv)
         ("split", po::value<std::string>(), "Split video into segments. Provide segment lenght and gap in frames as argument. Example: --split 120,40")
         ("skip", po::value<size_t>()->default_value(0), "Skip n frames from the video begining. Example: --skip 60")
         ("disable-object-detection", "Disable object detection step")
-        ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: median, number (1-100)")
+        ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: 'median', number (1÷100%)")
         ("input-files", po::value<std::vector<std::string>>(), "input files");
 
     po::variables_map vm;
