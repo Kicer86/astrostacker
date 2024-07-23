@@ -14,6 +14,8 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 
+add_subdirectory(tests)
+
 find_package(Boost REQUIRED COMPONENTS program_options)
 find_package(OpenCV REQUIRED)
 find_package(OpenMP REQUIRED)
