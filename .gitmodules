@@ -1,3 +1,6 @@
 [submodule "vcpkg"]
 	path = vcpkg
 	url = https://github.com/microsoft/vcpkg.git
+[submodule "tests/video-files"]
+	path = tests/video-files
+	url = https://gitlab.com/kicer86/video-files.git
