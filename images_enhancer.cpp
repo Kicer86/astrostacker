@@ -19,7 +19,8 @@ namespace
         cv::Mat psfFlipped;
         cv::flip(psf, psfFlipped, -1);
 
-        for (int i = 0; i < iterations; i++) {
+        for (int i = 0; i < iterations; i++)
+        {
             cv::filter2D(estimate, estimatePrevious, -1, psfFlipped, cv::Point(-1, -1), 0, cv::BORDER_REPLICATE);
             cv::divide(image, estimatePrevious, estimatePrevious);
             cv::filter2D(estimatePrevious, estimatePrevious, -1, psf, cv::Point(-1, -1), 0, cv::BORDER_REPLICATE);
@@ -29,7 +30,8 @@ namespace
         return estimate;
     }
 
-    cv::Mat enhanceContrast(const cv::Mat& img) {
+    cv::Mat enhanceContrast(const cv::Mat& img)
+    {
         cv::Mat labImage;
         cv::cvtColor(img, labImage, cv::COLOR_BGR2Lab);
 
@@ -49,13 +51,15 @@ namespace
         return result;
     }
 
-    cv::Mat reduceNoise(const cv::Mat& img) {
+    cv::Mat reduceNoise(const cv::Mat& img)
+    {
         cv::Mat denoised;
         cv::fastNlMeansDenoisingColored(img, denoised, 10, 10, 7, 21);
         return denoised;
     }
 
-    cv::Mat sharpenImage(const cv::Mat& img) {
+    cv::Mat sharpenImage(const cv::Mat& img)
+    {
         cv::Mat blurred, sharpened;
         cv::GaussianBlur(img, blurred, cv::Size(0, 0), 3);
         cv::addWeighted(img, 1.5, blurred, -0.5, 0, sharpened);
