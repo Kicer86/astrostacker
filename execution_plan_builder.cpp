@@ -40,6 +40,22 @@ public:
         m_ops.emplace_back(title, operation);
     }
 
+    template<typename Op, typename... Args>
+    requires std::is_invocable_r_v<ImagesList, Op, const std::filesystem::path &, ImagesView, Args...>
+    auto addPostStep(std::string_view title, std::string_view dirName, Op op, Args... input)
+    {
+        using namespace std::placeholders;
+
+        // purpose of this lambda is to postpone working dir creation until step execution
+        auto step = [this, op, dirName, input...](ImagesView images)
+        {
+            return op(m_wd.getSubDir(dirName).path(), images, input...);
+        };
+
+        Operation operation = std::bind(step, _1);
+        m_postOps.emplace_back(title, operation);
+    }
+
     ImagesList execute(ImagesView files)
     {
         ImagesList imagesList(files.begin(), files.end());
@@ -57,11 +73,18 @@ public:
                 break;
         }
 
+        for(const auto& op: m_postOps)
+            if (op.first)
+                imagesList = measureTimeWithMessage(*op.first, op.second, imagesList);
+            else
+                imagesList = op.second(imagesList);
+
         return imagesList;
     }
 
 private:
     std::vector<std::pair<std::optional<std::string>, Operation>> m_ops;
+    std::vector<std::pair<std::optional<std::string>, Operation>> m_postOps;
     WorkingDir m_wd;
     const size_t m_maxSteps;
 };
