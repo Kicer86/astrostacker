@@ -7,45 +7,63 @@
   },
   "configurePresets": [
     {
-      "name": "ninja_debug_vcpkg",
-      "displayName": "Ninja Debug Config",
+      "name": "Config Base",
+      "hidden": true,
       "description": "Configure with vcpkg toolchain",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "installDir": "${sourceDir}/out/install/${presetName}",
       "generator": "Ninja",
-      "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+    },
+    {
+      "name": "Debug Config",
+      "inherits": "Config Base",
+      "displayName": "Ninja Debug Config",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "ninja_release_vcpkg",
+      "name": "Release Config",
+      "inherits": "Config Base",
       "displayName": "Ninja Release Config",
-      "description": "Configure with vcpkg toolchain",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "installDir": "${sourceDir}/out/install/${presetName}",
-      "generator": "Ninja",
-      "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "cacheVariables": {
-        "BUILD_TESTING": "OFF",
-        "CMAKE_BUILD_TYPE":  "Release"
+        "CMAKE_BUILD_TYPE": "Release"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "Ninja Debug",
-      "configurePreset": "ninja_debug_vcpkg",
+      "name": "Build Debug",
+      "configurePreset": "Debug Config",
       "displayName": "Build Debug",
       "description": "Build Debug with Ninja",
       "configuration": "Debug"
     },
     {
-      "name": "Ninja Release",
-      "configurePreset": "ninja_release_vcpkg",
+      "name": "Build Release",
+      "configurePreset": "Release Config",
       "displayName": "Build Release",
       "description": "Build Release with Ninja",
       "configuration": "Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "Test Base",
+      "hidden": true,
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": false}
+    },
+    {
+      "name": "Test Debug",
+      "configurePreset": "Debug Config",
+      "inherits": "Test Base"
+    },
+    {
+      "name": "Test Release",
+      "configurePreset": "Release Config",
+      "inherits": "Test Base"
     }
   ]
 }

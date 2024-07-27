@@ -6,6 +6,7 @@
   "description": "Tool astrophotography image stacking.",
   "dependencies": [
     "boost-program-options",
+    "gtest",
     {
       "name": "opencv4",
       "default-features": false,

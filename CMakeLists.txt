@@ -14,6 +14,10 @@ set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 
+enable_testing()
+
+add_subdirectory(tests)
+
 find_package(Boost REQUIRED COMPONENTS program_options)
 find_package(OpenCV REQUIRED)
 find_package(OpenMP REQUIRED)
@@ -25,6 +29,7 @@ add_executable(astro-stacker
 target_sources(astro-stacker
   PUBLIC
     FILE_SET CXX_MODULES FILES
+      config.cpp
       frame_extractor.cpp
       images_aligner.cpp
       images_cropper.cpp
