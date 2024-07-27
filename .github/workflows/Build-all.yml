@@ -52,3 +52,6 @@ jobs:
 
     - name: Build
       run: cmake --build --preset "Ninja Release"
+
+    - name: Test
+      run: ctest --preset "Test Release"
