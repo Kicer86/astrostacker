@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <iostream>
 
+import abberation_fixer;
 import config;
 import frame_extractor;
 import images_aligner;
@@ -75,7 +76,8 @@ int main(int argc, char** argv)
 
             const auto objects = doObjectDetection? step("Extracting main object.", segment_wd.getSubDir("object"), extractObject, segmentImages) : segmentImages;
             const auto cropped = crop.has_value()? step("Cropping.", segment_wd.getSubDir("crop"), cropImages, objects, *crop) : objects;
-            const auto bestImages = step("Choosing best images.", segment_wd.getSubDir("best"), pickImages, cropped, pickerMethod);
+            const auto chromaFixed = step("Fixing chromatic abberation", segment_wd.getSubDir("chroma"), fixChromaticAbberation, cropped);
+            const auto bestImages = step("Choosing best images.", segment_wd.getSubDir("best"), pickImages, chromaFixed, pickerMethod);
             const auto alignedImages = step("Aligning images.", segment_wd.getSubDir("aligned"), alignImages, bestImages);
             const auto stackedImages = step("Stacking images.", segment_wd.getSubDir("stacked"), stackImages, alignedImages);
             step("Enhancing images.", segment_wd.getSubDir("enhanced"), enhanceImages, stackedImages);
