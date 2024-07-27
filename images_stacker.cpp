@@ -74,7 +74,7 @@ namespace
 }
 
 
-export std::vector<std::filesystem::path> stackImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
+export std::vector<std::filesystem::path> stackImages(const std::filesystem::path& dir, const std::vector<std::filesystem::path>& images)
 {
     const auto averageImg = averageStacking(images);
 

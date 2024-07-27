@@ -97,7 +97,7 @@ namespace
     auto step(std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, Args... input)
     {
         const auto stepWorkingDir = makeSubDir(wd, subdir);
-        return measureTimeWithMessage(title, op, std::forward<Args>(input)..., stepWorkingDir);
+        return measureTimeWithMessage(title, op, stepWorkingDir, std::forward<Args>(input)...);
     }
 }
 
