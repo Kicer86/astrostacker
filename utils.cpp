@@ -139,3 +139,37 @@ export std::vector<std::filesystem::path> createLinks(std::span<const std::files
 
     return result;
 }
+
+export class WorkingDir
+{
+public:
+    WorkingDir(std::filesystem::path dir)
+        : m_dir(dir)
+    {}
+
+    WorkingDir getSubDir(std::string_view subdir)
+    {
+        const std::filesystem::path path = m_dir / std::format("#{} {}", m_c, subdir);
+        std::filesystem::create_directories(path);
+        m_c++;
+
+        return WorkingDir(path);
+    }
+
+    WorkingDir getExactSubDir(std::string_view subdir)
+    {
+        const std::filesystem::path path = m_dir / subdir;
+        std::filesystem::create_directories(path);
+
+        return WorkingDir(path);
+    }
+
+    std::filesystem::path path() const
+    {
+        return m_dir;
+    }
+
+private:
+    std::filesystem::path m_dir;
+    int m_c = 0;
+};

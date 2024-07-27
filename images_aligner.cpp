@@ -111,7 +111,7 @@ namespace
 }
 
 
-export std::vector<std::filesystem::path> alignImages(const std::vector<std::filesystem::path>& images, const std::filesystem::path& dir)
+export std::vector<std::filesystem::path> alignImages(const std::filesystem::path& dir, const std::vector<std::filesystem::path>& images)
 {
     // TODO: replace with structure binding when supported by compilers
     const std::pair transformationsAndSize = calculateTransformations(images);

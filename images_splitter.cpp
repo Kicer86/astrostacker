@@ -12,7 +12,7 @@ export module images_splitter;
 import utils;
 
 
-export std::vector<std::vector<std::filesystem::path>> splitImages(std::span<const std::filesystem::path> images, std::pair<int, int> split, const std::filesystem::path& dir)
+export std::vector<std::vector<std::filesystem::path>> splitImages(std::span<const std::filesystem::path> images, std::pair<int, int> split)
 {
     const int framesInSegmentToBeTaken = split.first;
     const int framesInSegmentToBeIgnored = split.second;

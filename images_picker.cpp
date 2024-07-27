@@ -49,7 +49,7 @@ namespace
 export struct MedianPicker {};
 export using PickerMethod = std::variant<int, MedianPicker>;
 
-export std::vector<std::filesystem::path> pickImages(const std::vector<std::filesystem::path>& images, const PickerMethod& method, const std::filesystem::path& dir)
+export std::vector<std::filesystem::path> pickImages(const std::filesystem::path& dir, const std::vector<std::filesystem::path>& images, const PickerMethod& method)
 {
     std::vector<std::pair<double, size_t>> score;
 

@@ -18,16 +18,6 @@ import utils;
 
 namespace
 {
-    std::filesystem::path makeSubDir(const std::filesystem::path& wd, std::string_view subdir)
-    {
-        static int c = 0;
-        const std::filesystem::path path = wd / std::format("#{} {}", c, subdir);
-        std::filesystem::create_directory(path);
-        c++;
-
-        return path;
-    }
-
     std::string getCurrentTime()
     {
         const std::time_t now = std::time(nullptr);
@@ -94,10 +84,15 @@ namespace
     }
 
     template<typename... Args>
-    auto step(std::string_view title, const std::filesystem::path& wd, std::string_view subdir, auto op, Args... input)
+    auto step(std::string_view title, const WorkingDir& wd, auto op, Args... input)
     {
-        const auto stepWorkingDir = makeSubDir(wd, subdir);
-        return measureTimeWithMessage(title, op, std::forward<Args>(input)..., stepWorkingDir);
+        return measureTimeWithMessage(title, op, wd.path(), std::forward<Args>(input)...);
+    }
+
+    template<typename... Args>
+    auto step(std::string_view title, auto op, Args... input)
+    {
+        return measureTimeWithMessage(title, op, std::forward<Args>(input)...);
     }
 }
 
@@ -149,8 +144,8 @@ int main(int argc, char** argv)
     const bool doObjectDetection = vm.count("disable-object-detection") == 0;
     const std::vector<std::string> inputFiles = vm["input-files"].as<std::vector<std::string>>();
     const std::filesystem::path input_file = inputFiles[0];
-    const std::filesystem::path wd = wd_option / getCurrentTime();
     const auto pickerMethod = readPickerMethod(best);
+    WorkingDir wd(wd_option / getCurrentTime());
 
     if (pickerMethod.has_value() == false)
     {
@@ -164,15 +159,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    const bool wd_status = std::filesystem::create_directories(wd);
-
-    if (wd_status == false)
-    {
-        std::cerr << "Could not create working dir: " << wd << "\n";
-        return 1;
-    }
-
-    const auto images = step("Extracting frames from video.", wd, "images", extractFrames, input_file);
+    const auto images = step("Extracting frames from video.", wd.getSubDir("images"), extractFrames, input_file);
     if (images.empty())
     {
         std::cerr << "Error reading frames from video file.\n";
@@ -181,24 +168,27 @@ int main(int argc, char** argv)
 
     const std::vector<std::filesystem::path> imagesAfterSkip(images.begin() + skip, images.end());
 
-    const auto imageSegments = split.has_value()? step("Splitting.", wd, "segments", splitImages, imagesAfterSkip, *split) : std::vector<std::vector<std::filesystem::path>>{imagesAfterSkip};
+    const auto imageSegments = split.has_value()? step("Splitting.", splitImages, imagesAfterSkip, *split) : std::vector<std::vector<std::filesystem::path>>{imagesAfterSkip};
     const auto segments = imageSegments.size();
+    assert(segments > 0);
+
+    // if there is more than one segment, create subdirs structure
+    auto segmentsDir = segments == 1? wd : wd.getSubDir("segments");
 
     for (size_t i = 0; i < segments; i++)
     {
-        const std::filesystem::path segment_wd = segments == 1? wd : wd / std::to_string(i);
-        std::filesystem::create_directories(segment_wd);
+        WorkingDir segment_wd = segments == 1? segmentsDir : segmentsDir.getExactSubDir(std::to_string(i));
 
         const auto& segmentImages = imageSegments[i];
         if (segments > 1)
             std::cout << "Processing segment #" << i + 1 << " of " << segments << "\n";
 
-        const auto objects = doObjectDetection? step("Extracting main object.", segment_wd, "object", extractObject, segmentImages) : segmentImages;
-        const auto cropped = crop.has_value()? step("Cropping.", segment_wd, "crop", cropImages, objects, *crop) : objects;
-        const auto bestImages = step("Choosing best images.", segment_wd, "best", pickImages, cropped, *pickerMethod);
-        const auto alignedImages = step("Aligning images.", segment_wd, "aligned", alignImages, bestImages);
-        const auto stackedImages = step("Stacking images.", segment_wd, "stacked", stackImages, alignedImages);
-        step("Enhancing images.", segment_wd, "enhanced", enhanceImages, stackedImages);
+        const auto objects = doObjectDetection? step("Extracting main object.", segment_wd.getSubDir("object"), extractObject, segmentImages) : segmentImages;
+        const auto cropped = crop.has_value()? step("Cropping.", segment_wd.getSubDir("crop"), cropImages, objects, *crop) : objects;
+        const auto bestImages = step("Choosing best images.", segment_wd.getSubDir("best"), pickImages, cropped, *pickerMethod);
+        const auto alignedImages = step("Aligning images.", segment_wd.getSubDir("aligned"), alignImages, bestImages);
+        const auto stackedImages = step("Stacking images.", segment_wd.getSubDir("stacked"), stackImages, alignedImages);
+        step("Enhancing images.", segment_wd.getSubDir("enhanced"), enhanceImages, stackedImages);
     }
 
     return 0;
