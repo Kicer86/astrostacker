@@ -63,8 +63,6 @@ namespace
 
     std::pair<std::vector<cv::Mat>, cv::Size> calculateTransformations(const std::vector<std::filesystem::path>& images)
     {
-        const cv::TermCriteria termcrit(cv::TermCriteria::COUNT | cv::TermCriteria::EPS, 20, 0.03);
-
         const auto& first = images.front();
         const auto referenceImage = cv::imread(first.string());
         cv::Size minimalSize = referenceImage.size();
