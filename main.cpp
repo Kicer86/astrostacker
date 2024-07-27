@@ -168,6 +168,7 @@ int main(int argc, char** argv)
 
     for (size_t i = 0; i < segments; i++)
     {
+        // if there is only one segment, do not create subdirs structure, keep working in main working dir
         WorkingDir segment_wd = segments == 1? wd : segmentsDir.getExactSubDir(std::to_string(i));
 
         const auto& segmentImages = imageSegments[i];
