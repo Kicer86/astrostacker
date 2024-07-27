@@ -29,6 +29,7 @@ add_executable(astro-stacker
 target_sources(astro-stacker
   PUBLIC
     FILE_SET CXX_MODULES FILES
+      abberation_fixer.cpp
       config.cpp
       frame_extractor.cpp
       images_aligner.cpp
