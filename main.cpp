@@ -88,6 +88,12 @@ namespace
     {
         return measureTimeWithMessage(title, op, wd.path(), std::forward<Args>(input)...);
     }
+
+    template<typename... Args>
+    auto step(std::string_view title, auto op, Args... input)
+    {
+        return measureTimeWithMessage(title, op, std::forward<Args>(input)...);
+    }
 }
 
 
@@ -162,14 +168,16 @@ int main(int argc, char** argv)
 
     const std::vector<std::filesystem::path> imagesAfterSkip(images.begin() + skip, images.end());
 
-    auto segmentsDir = wd.getSubDir("segments");
-    const auto imageSegments = split.has_value()? step("Splitting.", segmentsDir, splitImages, imagesAfterSkip, *split) : std::vector<std::vector<std::filesystem::path>>{imagesAfterSkip};
+    const auto imageSegments = split.has_value()? step("Splitting.", splitImages, imagesAfterSkip, *split) : std::vector<std::vector<std::filesystem::path>>{imagesAfterSkip};
     const auto segments = imageSegments.size();
+    assert(segments > 0);
+
+    // if there is more than one segment, create subdirs structure
+    auto segmentsDir = segments == 1? wd : wd.getSubDir("segments");
 
     for (size_t i = 0; i < segments; i++)
     {
-        // if there is only one segment, do not create subdirs structure, keep working in main working dir
-        WorkingDir segment_wd = segments == 1? wd : segmentsDir.getExactSubDir(std::to_string(i));
+        WorkingDir segment_wd = segments == 1? segmentsDir : segmentsDir.getExactSubDir(std::to_string(i));
 
         const auto& segmentImages = imageSegments[i];
         if (segments > 1)
