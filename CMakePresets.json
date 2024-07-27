@@ -47,5 +47,23 @@
       "description": "Build Release with Ninja",
       "configuration": "Release"
     }
+  ],
+  "testPresets": [
+    {
+      "name": "Test Base",
+      "hidden": true,
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": false}
+    },
+    {
+      "name": "Debug Test",
+      "configurePreset": "ninja_debug_vcpkg",
+      "inherits": "Test Base"
+    },
+    {
+      "name": "Release Test",
+      "configurePreset": "ninja_release_vcpkg",
+      "inherits": "Test Base"
+    }
   ]
 }
