@@ -85,7 +85,7 @@ export struct Config
 };
 
 
-export std::optional<Config> readParams(int argc, char** argv)
+export Config readParams(int argc, char** argv)
 {
     namespace po = boost::program_options;
 
@@ -108,21 +108,16 @@ export std::optional<Config> readParams(int argc, char** argv)
 
     if (vm.count("help"))
     {
-        std::cout << desc << "\n";
-        return {};
+        std::stringstream help;
+        help << desc;
+        throw std::runtime_error(help.str());
     }
 
     if (vm.count("working-dir") == 0)
-    {
-        std::cerr << "--working-dir option is required\n";
-        return {};
-    }
+        throw std::invalid_argument("--working-dir option is required");
 
     if (vm.count("input-files") == 0)
-    {
-        std::cerr << "Provide input files\n";
-        return {};
-    }
+        throw std::invalid_argument("Provide input files");
 
     const std::filesystem::path wd_option = vm["working-dir"].as<std::string>();
     const auto crop = readCrop(vm["crop"]);
@@ -136,10 +131,7 @@ export std::optional<Config> readParams(int argc, char** argv)
     const auto wd = wd_option / getCurrentTime();
 
     if (pickerMethod.has_value() == false)
-    {
-        std::cerr << "Invalid value for --use-best argument: " << best.as<std::string>() << ". Expected 'median' or % value 1÷100\n";
-        return {};
-    }
+        throw std::invalid_argument("Invalid value for --use-best argument: " + best.as<std::string>() + ". Expected 'median' or % value 1÷100");
 
     return Config{.crop = crop, .split = split, .skip = skip, .doObjectDetection = doObjectDetection, .inputFiles = inputFiles, .pickerMethod = *pickerMethod, .wd = wd};
 }
