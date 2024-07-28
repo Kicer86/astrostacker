@@ -30,51 +30,45 @@ int main(int argc, char** argv)
         const auto& crop = config.crop;
         const auto& pickerMethod = config.pickerMethod;
 
-        ExecutionPlanBuilder epb(wd);
-        epb.addStep("Extracting frames from video.", "images", extractFrames);
+        const auto& inputFile = config.inputFiles.front();
 
-        if (skip > 0)
-            epb.addStep("Skipping frames.", [skip](ImagesView images) -> ImagesList
-            {
-                return std::vector<std::filesystem::path>(images.begin() + skip, images.end());
-            });
+        const size_t firstFrame = skip;
+        const size_t lastFrame = videoFrames(inputFile);
+        const size_t frames = lastFrame - firstFrame;
 
-        auto onSegmentOperations = [&](WorkingDir wd, ImagesView images)
+        if (frames == 0)
+            throw std::runtime_error("Error reading frames from video file.");
+
+        const size_t framesInSegmentToBeTaken = split? split->first : frames;
+        const size_t framesInSegmentToBeIgnored = split? split->second : 0;
+        const size_t segmentSize = framesInSegmentToBeTaken + framesInSegmentToBeIgnored;
+
+        const size_t segments = divideWithRoundUp(frames, segmentSize);
+
+        for(int i = 0; i < segments; i++)
         {
-            ExecutionPlanBuilder segmentEpb(wd);
+            const auto segmentBegin = i * segmentSize;
+            const auto segmentEnd = std::min(segmentBegin + segmentSize, lastFrame);
+
+            WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i));
+
+            ExecutionPlanBuilder epb(segmentWorkingDir);
+            epb.addStep("Extracting frames from video.", "images", extractFrames, segmentBegin, segmentEnd);
 
             if (doObjectDetection)
-                segmentEpb.addStep("Extracting main object.", "object", extractObject);
+                epb.addStep("Extracting main object.", "object", extractObject);
 
             if (crop.has_value())
-                segmentEpb.addStep("Cropping.", "crop", cropImages, *crop);
+                epb.addStep("Cropping.", "crop", cropImages, *crop);
 
             //segmentEpb.addStep("Fixing chromatic abberation", "chroma", fixChromaticAbberation);
-            segmentEpb.addStep("Choosing best images.", "best", pickImages, pickerMethod);
-            segmentEpb.addStep("Aligning images.", "aligned", alignImages);
-            segmentEpb.addStep("Stacking images.", "stacked", stackImages);
-            segmentEpb.addStep("Enhancing images.", "enhanced", enhanceImages);
+            epb.addStep("Choosing best images.", "best", pickImages, pickerMethod);
+            epb.addStep("Aligning images.", "aligned", alignImages);
+            epb.addStep("Stacking images.", "stacked", stackImages);
+            epb.addStep("Enhancing images.", "enhanced", enhanceImages);
 
-            return segmentEpb.execute(images);
-        };
-
-        if (split.has_value())
-            epb.addStep("Splitting.", "segments", [&onSegmentOperations, &split](WorkingDir wd, ImagesView images) -> ImagesList
-            {
-                const auto imageSegments = splitImages(images, *split);
-                const auto segments = imageSegments.size();
-                for (size_t i = 0; i < segments; i++)
-                {
-                    auto segmentDir = wd.getExactSubDir(std::to_string(i));
-                    onSegmentOperations(segmentDir, imageSegments[i]);
-                }
-
-                return ImagesList();
-            });
-        else
-            epb.addStep(onSegmentOperations);
-
-        epb.execute(inputFiles);
+            epb.execute(inputFiles);
+        }
     }
     catch(const std::runtime_error& error)
     {

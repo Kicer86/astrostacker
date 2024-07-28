@@ -7,32 +7,11 @@ module;
 #include <omp.h>
 
 export module frame_extractor;
+import utils;
 
 namespace
 {
-    size_t divideWithRoundUp(size_t lhs, size_t rhs)
-    {
-        return (lhs + rhs - 1) / rhs;
-    }
-
-    size_t videoFrames(const std::filesystem::path& file)
-    {
-        cv::VideoCapture video(file.string(), cv::CAP_FFMPEG);
-
-        if (video.isOpened())
-        {
-            const auto frames = video.get(cv::CAP_PROP_FRAME_COUNT);
-
-            if (frames >= 0)
-                return static_cast<size_t>(frames);
-            else
-                return 0;
-        }
-        else
-            return 0;
-    }
-
-    std::vector<std::string> extractFrames(const std::filesystem::path& file, const std::filesystem::path& dir, size_t firstFrame, size_t lastFrame)
+    std::vector<std::filesystem::path> extractFrames(const std::filesystem::path& file, const std::filesystem::path& dir, size_t firstFrame, size_t lastFrame)
     {
         assert(lastFrame >= firstFrame);
 
@@ -42,7 +21,7 @@ namespace
 
         const auto fileName = file.filename().string();
 
-        std::vector<std::string> paths;
+        std::vector<std::filesystem::path> paths;
         paths.reserve(static_cast<size_t>(count));
 
         cv::VideoCapture video(file.string(), cv::CAP_FFMPEG);
@@ -55,8 +34,8 @@ namespace
                 cv::Mat frameMat;
                 video >> frameMat;
 
-                const std::string path = std::format("{}/{}-{}.png", dir.string(), fileName, frame);
-                cv::imwrite(path, frameMat);
+                const std::filesystem::path path = dir / std::format("{}-{}.png", fileName, frame);
+                cv::imwrite(path.string(), frameMat);
                 paths.push_back(path);
             }
         }
@@ -65,16 +44,34 @@ namespace
     }
 }
 
-export std::vector<std::filesystem::path> extractFrames(const std::filesystem::path& dir, std::span<const std::filesystem::path> files)
+
+export size_t videoFrames(const std::filesystem::path& file)
+{
+    cv::VideoCapture video(file.string(), cv::CAP_FFMPEG);
+
+    if (video.isOpened())
+    {
+        const auto frames = video.get(cv::CAP_PROP_FRAME_COUNT);
+
+        if (frames >= 0)
+            return static_cast<size_t>(frames);
+        else
+            return 0;
+    }
+    else
+        return 0;
+}
+
+
+export std::vector<std::filesystem::path> extractFrames(const std::filesystem::path& dir, std::span<const std::filesystem::path> files, size_t firstFrame, size_t lastFrame)
 {
     const auto file = files.front();
-    const auto frames = videoFrames(file);
-
-    if (frames == 0)
-        throw std::runtime_error("Error reading frames from video file.");
+    const auto frames = lastFrame - firstFrame;
 
     std::vector<std::filesystem::path> paths;
 
+    // split frames among threads. It would be nice to ure regular 'parallel for' but each thread needs to get
+    // continous region to work with.
     #pragma omp parallel
     {
         const auto threads = static_cast<size_t>(omp_get_num_threads());
@@ -90,12 +87,16 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
         }
         #pragma omp barrier
 
-        const auto firstFrame = std::min(frames, group_size * thread);
-        const auto lastFrame = std::min(frames, firstFrame + group_size);
-        const auto thread_paths = extractFrames(file, dir, firstFrame, lastFrame);
+        const auto threadFirstFrame = firstFrame + std::min(frames, group_size * thread);
+        const auto threadLastFrame = firstFrame + std::min(frames, threadFirstFrame + group_size);
 
-        for(size_t out_f = firstFrame, in_f = 0; out_f < lastFrame; out_f++, in_f++)
-            paths[out_f] = thread_paths[in_f];
+        if (threadLastFrame - threadFirstFrame > 0)
+        {
+            const auto thread_paths = extractFrames(file, dir, threadFirstFrame, threadLastFrame);
+
+            for(size_t out_f = threadFirstFrame, in_f = 0; out_f < threadLastFrame; out_f++, in_f++)
+                paths[out_f - firstFrame] = thread_paths[in_f];
+        }
     }
 
     return paths;
