@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <functional>
 #include <iostream>
+#include <span>
 
 import abberation_fixer;
 import config;
