@@ -65,8 +65,9 @@ namespace
     }
 }
 
-export std::vector<std::filesystem::path> extractFrames(const std::filesystem::path& dir, const std::filesystem::path& file)
+export std::vector<std::filesystem::path> extractFrames(const std::filesystem::path& dir, std::span<const std::filesystem::path> files)
 {
+    const auto file = files.front();
     const auto frames = videoFrames(file);
 
     if (frames == 0)

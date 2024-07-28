@@ -143,9 +143,15 @@ export std::vector<std::filesystem::path> createLinks(std::span<const std::files
 export class WorkingDir
 {
 public:
-    WorkingDir(std::filesystem::path dir)
+    explicit WorkingDir(std::filesystem::path dir)
         : m_dir(dir)
     {}
+
+    WorkingDir(const WorkingDir &) = default;
+    WorkingDir(WorkingDir &&) = default;
+
+    WorkingDir& operator=(const WorkingDir &) = default;
+    WorkingDir& operator=(WorkingDir &&) = default;
 
     WorkingDir getSubDir(std::string_view subdir)
     {

@@ -12,7 +12,7 @@ export module images_stacker;
 
 namespace
 {
-    cv::Mat averageStacking(const std::vector<std::filesystem::path>& images)
+    cv::Mat averageStacking(const std::span<const std::filesystem::path> images)
     {
         const cv::Mat firstImage = cv::imread(images.front().string());
 
@@ -37,7 +37,7 @@ namespace
     }
 
 
-    cv::Mat medianStacking(const std::vector<std::filesystem::path>& images)
+    cv::Mat medianStacking(const std::span<const std::filesystem::path> images)
     {
         // TODO: rewrite with std::mdspan
         const cv::Mat firstImage = cv::imread(images.front().string());
@@ -74,7 +74,7 @@ namespace
 }
 
 
-export std::vector<std::filesystem::path> stackImages(const std::filesystem::path& dir, const std::vector<std::filesystem::path>& images)
+export std::vector<std::filesystem::path> stackImages(const std::filesystem::path& dir, std::span<const std::filesystem::path> images)
 {
     const auto averageImg = averageStacking(images);
 

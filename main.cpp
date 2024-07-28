@@ -1,6 +1,7 @@
 
 #include <cassert>
 #include <filesystem>
+#include <functional>
 #include <iostream>
 
 import abberation_fixer;
@@ -18,6 +19,84 @@ import utils;
 
 namespace
 {
+    using ImagesList = std::vector<std::filesystem::path>;
+    using ImagesView = std::span<const std::filesystem::path>;
+    using Operation = std::function<ImagesList(ImagesView)>;
+
+    class ExecutionPlanBuilder
+    {
+    public:
+        ExecutionPlanBuilder(const WorkingDir& wd)
+            : m_wd(wd)
+        {
+
+        }
+
+        template<typename Op, typename... Args>
+        requires std::is_invocable_r_v<ImagesList, Op, const std::filesystem::path &, ImagesView, Args...>
+        auto addStep(std::string_view title, std::string_view dirName, Op op, Args... input)
+        {
+            using namespace std::placeholders;
+
+            Operation operation = std::bind(op, m_wd.getSubDir(dirName).path(), _1, std::forward<Args>(input)...);
+            m_ops.push_back(operation);
+        }
+
+        template<typename Op, typename... Args>
+        requires std::is_invocable_r_v<ImagesList, Op, WorkingDir, ImagesView, Args...>
+        auto addStep(std::string_view title, std::string_view dirName, Op op, Args... input)
+        {
+            using namespace std::placeholders;
+
+            Operation operation = std::bind(op, m_wd.getSubDir(dirName), _1, std::forward<Args>(input)...);
+            m_ops.push_back(operation);
+        }
+
+        template<typename Op, typename... Args>
+        requires std::is_invocable_r_v<ImagesList, Op, ImagesView, Args...>
+        auto addStep(std::string_view title, Op op, Args... input)
+        {
+            using namespace std::placeholders;
+
+            Operation operation = std::bind(op, _1, std::forward<Args>(input)...);
+            m_ops.push_back(operation);
+        }
+
+        template<typename Op, typename... Args>
+        requires std::is_invocable_r_v<ImagesList, Op, ImagesView, Args...>
+        auto addStep(Op op, Args... input)
+        {
+            using namespace std::placeholders;
+
+            Operation operation = std::bind(op, _1, std::forward<Args>(input)...);
+            m_ops.push_back(operation);
+        }
+
+        template<typename Op, typename... Args>
+        requires std::is_invocable_r_v<ImagesList, Op, WorkingDir, ImagesView, Args...>
+        auto addStep(Op op, Args... input)
+        {
+            using namespace std::placeholders;
+
+            Operation operation = std::bind(op, m_wd, _1, std::forward<Args>(input)...);
+            m_ops.push_back(operation);
+        }
+
+        ImagesList execute(ImagesView files)
+        {
+            ImagesList imagesList(files.begin(), files.end());
+
+            for(const auto& op: m_ops)
+                imagesList = op(imagesList);
+
+            return imagesList;
+        }
+
+    private:
+        std::vector<Operation> m_ops;
+        WorkingDir m_wd;
+    };
+
     template<typename First, typename... Rest>
     const First& getFirst(const First& first, Rest... rest)
     {
@@ -45,38 +124,60 @@ int main(int argc, char** argv)
         const auto config = readParams(argc, argv);
 
         WorkingDir wd(config.wd);
-        const auto& input_file = config.inputFiles.front();
+        const auto& inputFiles = config.inputFiles;
         const auto& skip = config.skip;
         const auto& split = config.split;
         const auto& doObjectDetection = config.doObjectDetection;
         const auto& crop = config.crop;
         const auto& pickerMethod = config.pickerMethod;
 
-        const auto images = step("Extracting frames from video.", wd.getSubDir("images"), extractFrames, input_file);
-        const std::vector<std::filesystem::path> imagesAfterSkip(images.begin() + skip, images.end());
+        ExecutionPlanBuilder epb(wd);
+        epb.addStep("Extracting frames from video.", "images", extractFrames);
 
-        const auto imageSegments = split.has_value()? step("Splitting.", splitImages, imagesAfterSkip, *split) : std::vector<std::vector<std::filesystem::path>>{imagesAfterSkip};
-        const auto segments = imageSegments.size();
+        if (skip > 0)
+            epb.addStep("Skipping frames.", [skip](ImagesView images) -> ImagesList
+            {
+                return std::vector<std::filesystem::path>(images.begin() + skip, images.end());
+            });
 
-        // if there is more than one segment, create subdirs structure
-        auto segmentsDir = segments == 1? wd : wd.getSubDir("segments");
-
-        for (size_t i = 0; i < segments; i++)
+        auto onSegmentOperations = [&](WorkingDir wd, ImagesView images)
         {
-            WorkingDir segment_wd = segments == 1? segmentsDir : segmentsDir.getExactSubDir(std::to_string(i));
+            ExecutionPlanBuilder segmentEpb(wd);
 
-            const auto& segmentImages = imageSegments[i];
-            if (segments > 1)
-                std::cout << "Processing segment #" << i + 1 << " of " << segments << "\n";
+            if (doObjectDetection)
+                segmentEpb.addStep("Extracting main object.", "object", extractObject);
 
-            const auto objects = doObjectDetection? step("Extracting main object.", segment_wd.getSubDir("object"), extractObject, segmentImages) : segmentImages;
-            const auto cropped = crop.has_value()? step("Cropping.", segment_wd.getSubDir("crop"), cropImages, objects, *crop) : objects;
-            const auto chromaFixed = step("Fixing chromatic abberation", segment_wd.getSubDir("chroma"), fixChromaticAbberation, cropped);
-            const auto bestImages = step("Choosing best images.", segment_wd.getSubDir("best"), pickImages, chromaFixed, pickerMethod);
-            const auto alignedImages = step("Aligning images.", segment_wd.getSubDir("aligned"), alignImages, bestImages);
-            const auto stackedImages = step("Stacking images.", segment_wd.getSubDir("stacked"), stackImages, alignedImages);
-            step("Enhancing images.", segment_wd.getSubDir("enhanced"), enhanceImages, stackedImages);
-        }
+            if (crop.has_value())
+                segmentEpb.addStep("Cropping.", "crop", cropImages, *crop);
+
+            segmentEpb.addStep("Fixing chromatic abberation", "chroma", fixChromaticAbberation);
+            segmentEpb.addStep("Choosing best images.", "best", pickImages, pickerMethod);
+            segmentEpb.addStep("Aligning images.", "aligned", alignImages);
+            segmentEpb.addStep("Stacking images.", "stacked", stackImages);
+            segmentEpb.addStep("Enhancing images.", "enhanced", enhanceImages);
+
+            return segmentEpb.execute(images);
+        };
+
+        if (split.has_value())
+            epb.addStep("Splitting.", "segments", [&onSegmentOperations, &split](WorkingDir wd, ImagesView images) -> ImagesList
+            {
+                auto segmentsDir = wd.getSubDir("segments");
+
+                const auto imageSegments = splitImages(images, *split);
+                const auto segments = imageSegments.size();
+                for (size_t i = 0; i < segments; i++)
+                {
+                    auto segmentDir = segmentsDir.getExactSubDir(std::to_string(i));
+                    onSegmentOperations(segmentDir, imageSegments[i]);
+                }
+
+                return ImagesList();
+            });
+        else
+            epb.addStep(onSegmentOperations);
+
+        epb.execute(inputFiles);
     }
     catch(const std::runtime_error& error)
     {
