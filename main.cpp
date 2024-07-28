@@ -39,7 +39,7 @@ namespace
             using namespace std::placeholders;
 
             Operation operation = std::bind(op, m_wd.getSubDir(dirName).path(), _1, std::forward<Args>(input)...);
-            m_ops.push_back(operation);
+            m_ops.emplace_back(title, operation);
         }
 
         template<typename Op, typename... Args>
@@ -49,7 +49,7 @@ namespace
             using namespace std::placeholders;
 
             Operation operation = std::bind(op, m_wd.getSubDir(dirName), _1, std::forward<Args>(input)...);
-            m_ops.push_back(operation);
+            m_ops.emplace_back(title, operation);
         }
 
         template<typename Op, typename... Args>
@@ -59,7 +59,7 @@ namespace
             using namespace std::placeholders;
 
             Operation operation = std::bind(op, _1, std::forward<Args>(input)...);
-            m_ops.push_back(operation);
+            m_ops.emplace_back(title, operation);
         }
 
         template<typename Op, typename... Args>
@@ -69,7 +69,7 @@ namespace
             using namespace std::placeholders;
 
             Operation operation = std::bind(op, _1, std::forward<Args>(input)...);
-            m_ops.push_back(operation);
+            m_ops.emplace_back(std::optional<std::string>(), operation);
         }
 
         template<typename Op, typename... Args>
@@ -79,7 +79,7 @@ namespace
             using namespace std::placeholders;
 
             Operation operation = std::bind(op, m_wd, _1, std::forward<Args>(input)...);
-            m_ops.push_back(operation);
+            m_ops.emplace_back(std::optional<std::string>(), operation);
         }
 
         ImagesList execute(ImagesView files)
@@ -87,13 +87,16 @@ namespace
             ImagesList imagesList(files.begin(), files.end());
 
             for(const auto& op: m_ops)
-                imagesList = op(imagesList);
+                if (op.first)
+                    imagesList = measureTimeWithMessage(*op.first, op.second, imagesList);
+                else
+                    imagesList = op.second(imagesList);
 
             return imagesList;
         }
 
     private:
-        std::vector<Operation> m_ops;
+        std::vector<std::pair<std::optional<std::string>, Operation>> m_ops;
         WorkingDir m_wd;
     };
 
