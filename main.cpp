@@ -53,15 +53,10 @@ int main(int argc, char** argv)
         const auto& pickerMethod = config.pickerMethod;
 
         const auto images = step("Extracting frames from video.", wd.getSubDir("images"), extractFrames, input_file);
-        if (images.empty())
-            throw std::runtime_error("Error reading frames from video file.");
-
         const std::vector<std::filesystem::path> imagesAfterSkip(images.begin() + skip, images.end());
 
         const auto imageSegments = split.has_value()? step("Splitting.", splitImages, imagesAfterSkip, *split) : std::vector<std::vector<std::filesystem::path>>{imagesAfterSkip};
         const auto segments = imageSegments.size();
-        if (segments < 1)
-            throw std::logic_error("Calculated number of segments is less than 1: " + std::to_string(segments));
 
         // if there is more than one segment, create subdirs structure
         auto segmentsDir = segments == 1? wd : wd.getSubDir("segments");

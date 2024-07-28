@@ -70,7 +70,7 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
     const auto frames = videoFrames(file);
 
     if (frames == 0)
-        return {};
+        throw std::runtime_error("Error reading frames from video file.");
 
     std::vector<std::filesystem::path> paths;
 
