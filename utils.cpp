@@ -161,7 +161,7 @@ public:
         return WorkingDir(path);
     }
 
-    WorkingDir getExactSubDir(std::string_view subdir)
+    WorkingDir getExactSubDir(std::string_view subdir) const
     {
         const std::filesystem::path path = m_dir / subdir;
         std::filesystem::create_directories(path);
