@@ -1,12 +1,10 @@
 
-#include <cassert>
 #include <filesystem>
-#include <functional>
 #include <iostream>
-#include <span>
 
 import abberation_fixer;
 import config;
+import execution_plan_builder;
 import frame_extractor;
 import images_aligner;
 import images_cropper;
@@ -16,107 +14,6 @@ import images_splitter;
 import images_stacker;
 import object_localizer;
 import utils;
-
-
-namespace
-{
-    using ImagesList = std::vector<std::filesystem::path>;
-    using ImagesView = std::span<const std::filesystem::path>;
-    using Operation = std::function<ImagesList(ImagesView)>;
-
-    class ExecutionPlanBuilder
-    {
-    public:
-        ExecutionPlanBuilder(const WorkingDir& wd)
-            : m_wd(wd)
-        {
-
-        }
-
-        template<typename Op, typename... Args>
-        requires std::is_invocable_r_v<ImagesList, Op, const std::filesystem::path &, ImagesView, Args...> ||
-                 std::is_invocable_r_v<ImagesList, Op, WorkingDir, ImagesView, Args...>
-        auto addStep(std::string_view title, std::string_view dirName, Op op, Args... input)
-        {
-            using namespace std::placeholders;
-
-            if constexpr (std::is_invocable_r_v<ImagesList, Op, const std::filesystem::path &, ImagesView, Args...>)
-            {
-                Operation operation = std::bind(op, m_wd.getSubDir(dirName).path(), _1, std::forward<Args>(input)...);
-                m_ops.emplace_back(title, operation);
-            }
-            else
-            {
-                Operation operation = std::bind(op, m_wd.getSubDir(dirName), _1, std::forward<Args>(input)...);
-                m_ops.emplace_back(title, operation);
-            }
-        }
-
-        template<typename Op, typename... Args>
-        requires std::is_invocable_r_v<ImagesList, Op, ImagesView, Args...>
-        auto addStep(std::string_view title, Op op, Args... input)
-        {
-            using namespace std::placeholders;
-
-            Operation operation = std::bind(op, _1, std::forward<Args>(input)...);
-            m_ops.emplace_back(title, operation);
-        }
-
-        template<typename Op, typename... Args>
-        requires std::is_invocable_r_v<ImagesList, Op, ImagesView, Args...> ||
-                 std::is_invocable_r_v<ImagesList, Op, WorkingDir, ImagesView, Args...>
-        auto addStep(Op op, Args... input)
-        {
-            using namespace std::placeholders;
-
-            if constexpr (std::is_invocable_r_v<ImagesList, Op, ImagesView, Args...>)
-            {
-                Operation operation = std::bind(op, _1, std::forward<Args>(input)...);
-                m_ops.emplace_back(std::optional<std::string>(), operation);
-            }
-            else
-            {
-                Operation operation = std::bind(op, m_wd, _1, std::forward<Args>(input)...);
-                m_ops.emplace_back(std::optional<std::string>(), operation);
-            }
-        }
-
-        ImagesList execute(ImagesView files)
-        {
-            ImagesList imagesList(files.begin(), files.end());
-
-            for(const auto& op: m_ops)
-                if (op.first)
-                    imagesList = measureTimeWithMessage(*op.first, op.second, imagesList);
-                else
-                    imagesList = op.second(imagesList);
-
-            return imagesList;
-        }
-
-    private:
-        std::vector<std::pair<std::optional<std::string>, Operation>> m_ops;
-        WorkingDir m_wd;
-    };
-
-    template<typename First, typename... Rest>
-    const First& getFirst(const First& first, Rest... rest)
-    {
-        return first;
-    }
-
-    template<typename... Args>
-    auto step(std::string_view title, const WorkingDir& wd, auto op, Args... input)
-    {
-        return measureTimeWithMessage(title, op, wd.path(), std::forward<Args>(input)...);
-    }
-
-    template<typename... Args>
-    auto step(std::string_view title, auto op, Args... input)
-    {
-        return measureTimeWithMessage(title, op, std::forward<Args>(input)...);
-    }
-}
 
 
 int main(int argc, char** argv)
