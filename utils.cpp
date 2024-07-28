@@ -10,7 +10,6 @@ module;
 
 export module utils;
 
-
 class Timer
 {
     public:
@@ -179,3 +178,9 @@ private:
     std::filesystem::path m_dir;
     int m_c = 0;
 };
+
+
+export size_t divideWithRoundUp(size_t lhs, size_t rhs)
+{
+    return (lhs + rhs - 1) / rhs;
+}
