@@ -164,13 +164,11 @@ int main(int argc, char** argv)
         if (split.has_value())
             epb.addStep("Splitting.", "segments", [&onSegmentOperations, &split](WorkingDir wd, ImagesView images) -> ImagesList
             {
-                auto segmentsDir = wd.getSubDir("segments");
-
                 const auto imageSegments = splitImages(images, *split);
                 const auto segments = imageSegments.size();
                 for (size_t i = 0; i < segments; i++)
                 {
-                    auto segmentDir = segmentsDir.getExactSubDir(std::to_string(i));
+                    auto segmentDir = wd.getExactSubDir(std::to_string(i));
                     onSegmentOperations(segmentDir, imageSegments[i]);
                 }
 
