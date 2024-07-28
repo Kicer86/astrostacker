@@ -150,7 +150,7 @@ int main(int argc, char** argv)
             if (crop.has_value())
                 segmentEpb.addStep("Cropping.", "crop", cropImages, *crop);
 
-            segmentEpb.addStep("Fixing chromatic abberation", "chroma", fixChromaticAbberation);
+            //segmentEpb.addStep("Fixing chromatic abberation", "chroma", fixChromaticAbberation);
             segmentEpb.addStep("Choosing best images.", "best", pickImages, pickerMethod);
             segmentEpb.addStep("Aligning images.", "aligned", alignImages);
             segmentEpb.addStep("Stacking images.", "stacked", stackImages);
