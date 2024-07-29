@@ -2,6 +2,9 @@
 #include <filesystem>
 #include <iostream>
 
+#include <indicators/dynamic_progress.hpp>
+#include <indicators/indeterminate_progress_bar.hpp>
+
 import abberation_fixer;
 import config;
 import execution_plan_builder;
@@ -16,8 +19,28 @@ import object_localizer;
 import utils;
 
 
+namespace
+{
+    class HideCursor final
+    {
+    public:
+        HideCursor()
+        {
+            indicators::show_console_cursor(false);
+        }
+
+        ~HideCursor()
+        {
+            indicators::show_console_cursor(true);
+        }
+    };
+}
+
+
 int main(int argc, char** argv)
 {
+    HideCursor _;
+
     try
     {
         const auto config = readParams(argc, argv);
@@ -45,7 +68,10 @@ int main(int argc, char** argv)
 
         const size_t segments = divideWithRoundUp(frames, segmentSize);
 
-        #pragma omp parallel for
+        indicators::show_console_cursor(false);
+        indicators::DynamicProgress<indicators::IndeterminateProgressBar> progressBarManager;
+        progressBarManager.set_option(indicators::option::HideBarWhenComplete{false});
+
         for(int i = 0; i < segments; i++)
         {
             const auto segmentBegin = i * segmentSize;
@@ -53,7 +79,7 @@ int main(int argc, char** argv)
 
             WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i));
 
-            ExecutionPlanBuilder epb(segmentWorkingDir);
+            ExecutionPlanBuilder epb(segmentWorkingDir, progressBarManager);
             epb.addStep("Extracting frames from video.", "images", extractFrames, segmentBegin, segmentEnd);
 
             if (doObjectDetection)

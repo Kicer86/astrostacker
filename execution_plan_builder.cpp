@@ -6,6 +6,9 @@ module;
 #include <span>
 #include <vector>
 
+#include <indicators/dynamic_progress.hpp>
+#include <indicators/indeterminate_progress_bar.hpp>
+
 export module execution_plan_builder;
 import utils;
 
@@ -17,8 +20,9 @@ export using Operation = std::function<ImagesList(ImagesView)>;
 export class ExecutionPlanBuilder
 {
 public:
-    ExecutionPlanBuilder(const WorkingDir& wd)
+    ExecutionPlanBuilder(const WorkingDir& wd, indicators::DynamicProgress<indicators::IndeterminateProgressBar>& progressBarManager)
         : m_wd(wd)
+        , m_progressBarManager(progressBarManager)
     {
 
     }
@@ -38,7 +42,34 @@ public:
 
         for(const auto& op: m_ops)
             if (op.first)
-                imagesList = measureTimeWithMessage(*op.first, op.second, imagesList);
+            {
+                auto bar = std::make_unique<indicators::IndeterminateProgressBar>(
+                    //indicators::option::BarWidth{40},
+                    indicators::option::Start{"["},
+                    indicators::option::Fill{"·"},
+                    indicators::option::Lead{"<==>"},
+                    indicators::option::End{"]"},
+                    indicators::option::PostfixText{*op.first}
+                    //indicators::option::ForegroundColor{indicators::Color::yellow},
+                    //indicators::option::FontStyles{
+                    //    std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}
+                );
+
+                const auto barIdx = m_progressBarManager.push_back(std::move(bar));
+
+                std::jthread progressBarThread([this, barIdx]
+                {
+                    while (m_progressBarManager[barIdx].is_completed() == false)
+                    {
+                        m_progressBarManager[barIdx].tick();
+                        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                    }
+                });
+
+                imagesList = op.second(imagesList);
+                m_progressBarManager[barIdx].set_option(indicators::option::Lead{"·"});
+                m_progressBarManager[barIdx].mark_as_completed();
+            }
             else
                 imagesList = op.second(imagesList);
 
@@ -48,4 +79,5 @@ public:
 private:
     std::vector<std::pair<std::optional<std::string>, Operation>> m_ops;
     WorkingDir m_wd;
+    indicators::DynamicProgress<indicators::IndeterminateProgressBar>& m_progressBarManager;
 };
