@@ -45,7 +45,6 @@ int main(int argc, char** argv)
 
         const size_t segments = divideWithRoundUp(frames, segmentSize);
 
-        #pragma omp parallel for
         for(int i = 0; i < segments; i++)
         {
             const auto segmentBegin = i * segmentSize;
