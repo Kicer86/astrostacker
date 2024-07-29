@@ -43,6 +43,11 @@ target_sources(astro-stacker
       utils.cpp
 )
 
+target_include_directories(astro-stacker
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/third_party/indicators/single_include
+)
+
 target_link_libraries(astro-stacker
     PRIVATE
         Boost::program_options
