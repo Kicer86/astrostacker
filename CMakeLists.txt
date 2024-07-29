@@ -53,6 +53,11 @@ if (MSVC)
     target_compile_options(astro-stacker PRIVATE /openmp:llvm)
 endif()
 
+target_include_directories(astro-stacker
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/third_party/indicators/single_include
+)
+
 target_link_libraries(astro-stacker
     PRIVATE
         Boost::program_options
