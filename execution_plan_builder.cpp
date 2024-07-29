@@ -24,51 +24,12 @@ public:
     }
 
     template<typename Op, typename... Args>
-    requires std::is_invocable_r_v<ImagesList, Op, const std::filesystem::path &, ImagesView, Args...> ||
-                std::is_invocable_r_v<ImagesList, Op, WorkingDir, ImagesView, Args...>
+    requires std::is_invocable_r_v<ImagesList, Op, const std::filesystem::path &, ImagesView, Args...>
     auto addStep(std::string_view title, std::string_view dirName, Op op, Args... input)
     {
         using namespace std::placeholders;
-
-        if constexpr (std::is_invocable_r_v<ImagesList, Op, const std::filesystem::path &, ImagesView, Args...>)
-        {
-            Operation operation = std::bind(op, m_wd.getSubDir(dirName).path(), _1, std::forward<Args>(input)...);
-            m_ops.emplace_back(title, operation);
-        }
-        else
-        {
-            Operation operation = std::bind(op, m_wd.getSubDir(dirName), _1, std::forward<Args>(input)...);
-            m_ops.emplace_back(title, operation);
-        }
-    }
-
-    template<typename Op, typename... Args>
-    requires std::is_invocable_r_v<ImagesList, Op, ImagesView, Args...>
-    auto addStep(std::string_view title, Op op, Args... input)
-    {
-        using namespace std::placeholders;
-
-        Operation operation = std::bind(op, _1, std::forward<Args>(input)...);
+        Operation operation = std::bind(op, m_wd.getSubDir(dirName).path(), _1, std::forward<Args>(input)...);
         m_ops.emplace_back(title, operation);
-    }
-
-    template<typename Op, typename... Args>
-    requires std::is_invocable_r_v<ImagesList, Op, ImagesView, Args...> ||
-                std::is_invocable_r_v<ImagesList, Op, WorkingDir, ImagesView, Args...>
-    auto addStep(Op op, Args... input)
-    {
-        using namespace std::placeholders;
-
-        if constexpr (std::is_invocable_r_v<ImagesList, Op, ImagesView, Args...>)
-        {
-            Operation operation = std::bind(op, _1, std::forward<Args>(input)...);
-            m_ops.emplace_back(std::optional<std::string>(), operation);
-        }
-        else
-        {
-            Operation operation = std::bind(op, m_wd, _1, std::forward<Args>(input)...);
-            m_ops.emplace_back(std::optional<std::string>(), operation);
-        }
     }
 
     ImagesList execute(ImagesView files)
