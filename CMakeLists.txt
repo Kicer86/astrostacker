@@ -55,7 +55,7 @@ endif()
 
 target_include_directories(astro-stacker
   PRIVATE
-    ${PROJECT_SOURCE_DIR}/third_party/indicators/single_include
+    ${PROJECT_SOURCE_DIR}/third_party/indicators/include
 )
 
 target_link_libraries(astro-stacker
