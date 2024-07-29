@@ -63,7 +63,7 @@ namespace
     }
 }
 
-export std::vector<std::filesystem::path> enhanceImages(const std::filesystem::path& dir, const std::vector<std::filesystem::path>& images)
+export std::vector<std::filesystem::path> enhanceImages(const std::filesystem::path& dir, std::span<const std::filesystem::path> images)
 {
     const auto result = processImages(images, dir, [](const cv::Mat& image)
     {

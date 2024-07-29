@@ -66,7 +66,7 @@ namespace
 }
 
 
-export std::vector<std::filesystem::path> extractObject(const std::filesystem::path& dir, const std::vector<std::filesystem::path>& images)
+export std::vector<std::filesystem::path> extractObject(const std::filesystem::path& dir, std::span<const std::filesystem::path> images)
 {
     const auto contoursDir = dir / "contours";
     const auto objectsDir = dir / "objects";

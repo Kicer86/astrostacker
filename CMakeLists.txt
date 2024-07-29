@@ -31,6 +31,7 @@ target_sources(astro-stacker
     FILE_SET CXX_MODULES FILES
       abberation_fixer.cpp
       config.cpp
+      execution_plan_builder.cpp
       frame_extractor.cpp
       images_aligner.cpp
       images_cropper.cpp
@@ -40,6 +41,11 @@ target_sources(astro-stacker
       images_stacker.cpp
       object_localizer.cpp
       utils.cpp
+)
+
+target_include_directories(astro-stacker
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/third_party/indicators/include
 )
 
 target_link_libraries(astro-stacker

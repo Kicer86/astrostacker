@@ -10,7 +10,6 @@ module;
 
 export module utils;
 
-
 class Timer
 {
     public:
@@ -143,9 +142,15 @@ export std::vector<std::filesystem::path> createLinks(std::span<const std::files
 export class WorkingDir
 {
 public:
-    WorkingDir(std::filesystem::path dir)
+    explicit WorkingDir(std::filesystem::path dir)
         : m_dir(dir)
     {}
+
+    WorkingDir(const WorkingDir &) = default;
+    WorkingDir(WorkingDir &&) = default;
+
+    WorkingDir& operator=(const WorkingDir &) = default;
+    WorkingDir& operator=(WorkingDir &&) = default;
 
     WorkingDir getSubDir(std::string_view subdir)
     {
@@ -156,7 +161,7 @@ public:
         return WorkingDir(path);
     }
 
-    WorkingDir getExactSubDir(std::string_view subdir)
+    WorkingDir getExactSubDir(std::string_view subdir) const
     {
         const std::filesystem::path path = m_dir / subdir;
         std::filesystem::create_directories(path);
@@ -173,3 +178,9 @@ private:
     std::filesystem::path m_dir;
     int m_c = 0;
 };
+
+
+export size_t divideWithRoundUp(size_t lhs, size_t rhs)
+{
+    return (lhs + rhs - 1) / rhs;
+}
