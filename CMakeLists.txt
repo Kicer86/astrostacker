@@ -40,6 +40,7 @@ target_sources(astro-stacker
       images_splitter.cpp
       images_stacker.cpp
       object_localizer.cpp
+      transparency_applier.cpp
       utils.cpp
 )
 

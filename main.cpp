@@ -13,6 +13,7 @@ import images_picker;
 import images_splitter;
 import images_stacker;
 import object_localizer;
+import transparency_applier;
 import utils;
 
 
@@ -30,6 +31,7 @@ int main(int argc, char** argv)
         const auto& crop = config.crop;
         const auto& pickerMethod = config.pickerMethod;
         const auto& stopAfter = config.stopAfter;
+        const auto& backgroundThreshold = config.backgroundThreshold;
 
         const auto& inputFile = config.inputFiles.front();
 
@@ -67,6 +69,9 @@ int main(int argc, char** argv)
             epb.addStep("Aligning images.", "aligned", alignImages);
             epb.addStep("Stacking images.", "stacked", stackImages);
             epb.addStep("Enhancing images.", "enhanced", enhanceImages);
+
+            if (backgroundThreshold >= 0)
+                epb.addPostStep("Applying transparency.", "transparent", applyTransparency, backgroundThreshold);
 
             epb.execute(inputFiles);
         }
