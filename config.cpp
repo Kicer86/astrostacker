@@ -81,7 +81,8 @@ export struct Config
     const bool doObjectDetection;
     const std::vector<std::filesystem::path> inputFiles;
     const PickerMethod pickerMethod;
-    std::filesystem::path wd;;
+    const std::filesystem::path wd;
+    const size_t stopAfter;
 };
 
 
@@ -98,6 +99,7 @@ export Config readParams(int argc, char** argv)
         ("skip", po::value<size_t>()->default_value(0), "Skip n frames from the video begining. Example: --skip 60")
         ("disable-object-detection", "Disable object detection step")
         ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: 'median', number (1÷100%)")
+        ("stop-after", po::value<size_t>()->default_value(0), "Stop processing after N steps. For 0 (default) process all")
         ("input-files", po::value<std::vector<std::string>>(), "input files");
 
     po::variables_map vm;
@@ -126,6 +128,8 @@ export Config readParams(int argc, char** argv)
     const auto best = vm["use-best"];
     const bool doObjectDetection = vm.count("disable-object-detection") == 0;
     const std::vector<std::string> inputFilesStr = vm["input-files"].as<std::vector<std::string>>();
+    const auto stopAfter = vm["stop-after"].as<size_t>();
+
     const std::vector<std::filesystem::path> inputFiles(inputFilesStr.begin(), inputFilesStr.end());
     const auto pickerMethod = readPickerMethod(best);
     const auto wd = wd_option / getCurrentTime();
@@ -133,5 +137,5 @@ export Config readParams(int argc, char** argv)
     if (pickerMethod.has_value() == false)
         throw std::invalid_argument("Invalid value for --use-best argument: " + best.as<std::string>() + ". Expected 'median' or % value 1÷100");
 
-    return Config{.crop = crop, .split = split, .skip = skip, .doObjectDetection = doObjectDetection, .inputFiles = inputFiles, .pickerMethod = *pickerMethod, .wd = wd};
+    return Config{.crop = crop, .split = split, .skip = skip, .doObjectDetection = doObjectDetection, .inputFiles = inputFiles, .pickerMethod = *pickerMethod, .wd = wd, .stopAfter = stopAfter};
 }
