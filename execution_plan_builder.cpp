@@ -29,7 +29,14 @@ public:
     auto addStep(std::string_view title, std::string_view dirName, Op op, Args... input)
     {
         using namespace std::placeholders;
-        Operation operation = std::bind(op, m_wd.getSubDir(dirName).path(), _1, std::forward<Args>(input)...);
+
+        // purpose of this lambda is to postpone working dir creation until step execution
+        auto step = [this, op, dirName, input...](ImagesView images)
+        {
+            return op(m_wd.getSubDir(dirName).path(), images, input...);
+        };
+
+        Operation operation = std::bind(step, _1);
         m_ops.emplace_back(title, operation);
     }
 
