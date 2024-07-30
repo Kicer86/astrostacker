@@ -17,8 +17,9 @@ export using Operation = std::function<ImagesList(ImagesView)>;
 export class ExecutionPlanBuilder
 {
 public:
-    ExecutionPlanBuilder(const WorkingDir& wd)
+    ExecutionPlanBuilder(const WorkingDir& wd, size_t maxSteps = std::numeric_limits<size_t>::max())
         : m_wd(wd)
+        , m_maxSteps(maxSteps == 0? std::numeric_limits<size_t>::max(): maxSteps)
     {
 
     }
@@ -35,12 +36,19 @@ public:
     ImagesList execute(ImagesView files)
     {
         ImagesList imagesList(files.begin(), files.end());
+        size_t steps = m_maxSteps;
 
         for(const auto& op: m_ops)
+        {
             if (op.first)
                 imagesList = measureTimeWithMessage(*op.first, op.second, imagesList);
             else
                 imagesList = op.second(imagesList);
+
+            steps--;
+            if (steps == 0)
+                break;
+        }
 
         return imagesList;
     }
@@ -48,4 +56,5 @@ public:
 private:
     std::vector<std::pair<std::optional<std::string>, Operation>> m_ops;
     WorkingDir m_wd;
+    const size_t m_maxSteps;
 };

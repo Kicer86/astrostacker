@@ -29,6 +29,7 @@ int main(int argc, char** argv)
         const auto& doObjectDetection = config.doObjectDetection;
         const auto& crop = config.crop;
         const auto& pickerMethod = config.pickerMethod;
+        const auto& stopAfter = config.stopAfter;
 
         const auto& inputFile = config.inputFiles.front();
 
@@ -52,7 +53,7 @@ int main(int argc, char** argv)
 
             WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i));
 
-            ExecutionPlanBuilder epb(segmentWorkingDir);
+            ExecutionPlanBuilder epb(segmentWorkingDir, stopAfter);
             epb.addStep("Extracting frames from video.", "images", extractFrames, segmentBegin, segmentEnd);
 
             if (doObjectDetection)
