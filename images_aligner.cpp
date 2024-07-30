@@ -61,7 +61,7 @@ namespace
         return warp_matrix;
     }
 
-    std::pair<std::vector<cv::Mat>, cv::Size> calculateTransformations(const std::vector<std::filesystem::path>& images)
+    std::pair<std::vector<cv::Mat>, cv::Size> calculateTransformations(const std::span<const std::filesystem::path> images)
     {
         const auto& first = images.front();
         const auto referenceImage = cv::imread(first.string());
@@ -109,7 +109,7 @@ namespace
 }
 
 
-export std::vector<std::filesystem::path> alignImages(const std::filesystem::path& dir, const std::vector<std::filesystem::path>& images)
+export std::vector<std::filesystem::path> alignImages(const std::filesystem::path& dir, std::span<const std::filesystem::path> images)
 {
     // TODO: replace with structure binding when supported by compilers
     const std::pair transformationsAndSize = calculateTransformations(images);

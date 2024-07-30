@@ -1,10 +1,10 @@
 
-#include <cassert>
 #include <filesystem>
 #include <iostream>
 
 import abberation_fixer;
 import config;
+import execution_plan_builder;
 import frame_extractor;
 import images_aligner;
 import images_cropper;
@@ -16,28 +16,6 @@ import object_localizer;
 import utils;
 
 
-namespace
-{
-    template<typename First, typename... Rest>
-    const First& getFirst(const First& first, Rest... rest)
-    {
-        return first;
-    }
-
-    template<typename... Args>
-    auto step(std::string_view title, const WorkingDir& wd, auto op, Args... input)
-    {
-        return measureTimeWithMessage(title, op, wd.path(), std::forward<Args>(input)...);
-    }
-
-    template<typename... Args>
-    auto step(std::string_view title, auto op, Args... input)
-    {
-        return measureTimeWithMessage(title, op, std::forward<Args>(input)...);
-    }
-}
-
-
 int main(int argc, char** argv)
 {
     try
@@ -45,42 +23,51 @@ int main(int argc, char** argv)
         const auto config = readParams(argc, argv);
 
         WorkingDir wd(config.wd);
-        const auto& input_file = config.inputFiles.front();
+        const auto& inputFiles = config.inputFiles;
         const auto& skip = config.skip;
         const auto& split = config.split;
         const auto& doObjectDetection = config.doObjectDetection;
         const auto& crop = config.crop;
         const auto& pickerMethod = config.pickerMethod;
 
-        const auto images = step("Extracting frames from video.", wd.getSubDir("images"), extractFrames, input_file);
-        if (images.empty())
+        const auto& inputFile = config.inputFiles.front();
+
+        const size_t firstFrame = skip;
+        const size_t lastFrame = videoFrames(inputFile);
+        const size_t frames = lastFrame - firstFrame;
+
+        if (frames == 0)
             throw std::runtime_error("Error reading frames from video file.");
 
-        const std::vector<std::filesystem::path> imagesAfterSkip(images.begin() + skip, images.end());
+        const size_t framesInSegmentToBeTaken = split? split->first : frames;
+        const size_t framesInSegmentToBeIgnored = split? split->second : 0;
+        const size_t segmentSize = framesInSegmentToBeTaken + framesInSegmentToBeIgnored;
 
-        const auto imageSegments = split.has_value()? step("Splitting.", splitImages, imagesAfterSkip, *split) : std::vector<std::vector<std::filesystem::path>>{imagesAfterSkip};
-        const auto segments = imageSegments.size();
-        if (segments < 1)
-            throw std::logic_error("Calculated number of segments is less than 1: " + std::to_string(segments));
+        const size_t segments = divideWithRoundUp(frames, segmentSize);
 
-        // if there is more than one segment, create subdirs structure
-        auto segmentsDir = segments == 1? wd : wd.getSubDir("segments");
-
-        for (size_t i = 0; i < segments; i++)
+        for(int i = 0; i < segments; i++)
         {
-            WorkingDir segment_wd = segments == 1? segmentsDir : segmentsDir.getExactSubDir(std::to_string(i));
+            const auto segmentBegin = i * segmentSize;
+            const auto segmentEnd = std::min(segmentBegin + segmentSize, lastFrame);
 
-            const auto& segmentImages = imageSegments[i];
-            if (segments > 1)
-                std::cout << "Processing segment #" << i + 1 << " of " << segments << "\n";
+            WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i));
 
-            const auto objects = doObjectDetection? step("Extracting main object.", segment_wd.getSubDir("object"), extractObject, segmentImages) : segmentImages;
-            const auto cropped = crop.has_value()? step("Cropping.", segment_wd.getSubDir("crop"), cropImages, objects, *crop) : objects;
-            const auto chromaFixed = step("Fixing chromatic abberation", segment_wd.getSubDir("chroma"), fixChromaticAbberation, cropped);
-            const auto bestImages = step("Choosing best images.", segment_wd.getSubDir("best"), pickImages, chromaFixed, pickerMethod);
-            const auto alignedImages = step("Aligning images.", segment_wd.getSubDir("aligned"), alignImages, bestImages);
-            const auto stackedImages = step("Stacking images.", segment_wd.getSubDir("stacked"), stackImages, alignedImages);
-            step("Enhancing images.", segment_wd.getSubDir("enhanced"), enhanceImages, stackedImages);
+            ExecutionPlanBuilder epb(segmentWorkingDir);
+            epb.addStep("Extracting frames from video.", "images", extractFrames, segmentBegin, segmentEnd);
+
+            if (doObjectDetection)
+                epb.addStep("Extracting main object.", "object", extractObject);
+
+            if (crop.has_value())
+                epb.addStep("Cropping.", "crop", cropImages, *crop);
+
+            //segmentEpb.addStep("Fixing chromatic abberation", "chroma", fixChromaticAbberation);
+            epb.addStep("Choosing best images.", "best", pickImages, pickerMethod);
+            epb.addStep("Aligning images.", "aligned", alignImages);
+            epb.addStep("Stacking images.", "stacked", stackImages);
+            epb.addStep("Enhancing images.", "enhanced", enhanceImages);
+
+            epb.execute(inputFiles);
         }
     }
     catch(const std::runtime_error& error)
