@@ -6,7 +6,7 @@ module;
 
 #include <opencv2/opencv.hpp>
 
-export module abberation_fixer;
+export module aberration_fixer;
 import utils;
 
 namespace
@@ -38,7 +38,8 @@ namespace
 
         // Find homography and warp the channel
         const cv::Mat homography = cv::findHomography(srcPts, dstPts, cv::RANSAC);
-        const cv::Mat alignedChannel;
+
+        cv::Mat alignedChannel;
         cv::warpPerspective(channel, alignedChannel, homography, referenceChannel.size());
 
         return alignedChannel;
@@ -46,7 +47,7 @@ namespace
 }
 
 
-export std::vector<std::filesystem::path> fixChromaticAbberation(const std::filesystem::path& dir, std::span<const std::filesystem::path> images)
+export std::vector<std::filesystem::path> fixChromaticAberration(const std::filesystem::path& dir, std::span<const std::filesystem::path> images)
 {
     const auto fixed = processImages(images, dir, [](const auto& image)
     {
