@@ -63,10 +63,7 @@ public:
 
         for(const auto& op: m_ops)
         {
-            if (op.first)
-                imagesList = measureTimeWithMessage(*op.first, op.second, imagesList);
-            else
-                imagesList = op.second(imagesList);
+            imagesList = measureTimeWithMessage(op.first, op.second, imagesList);
 
             steps--;
             if (steps == 0)
@@ -74,17 +71,15 @@ public:
         }
 
         for(const auto& op: m_postOps)
-            if (op.first)
-                imagesList = measureTimeWithMessage(*op.first, op.second, imagesList);
-            else
-                imagesList = op.second(imagesList);
+            imagesList = measureTimeWithMessage(op.first, op.second, imagesList);
+
 
         return imagesList;
     }
 
 private:
-    std::vector<std::pair<std::optional<std::string>, Operation>> m_ops;
-    std::vector<std::pair<std::optional<std::string>, Operation>> m_postOps;
+    std::vector<std::pair<std::string, Operation>> m_ops;
+    std::vector<std::pair<std::string, Operation>> m_postOps;
     WorkingDir m_wd;
     const size_t m_maxSteps;
 };
