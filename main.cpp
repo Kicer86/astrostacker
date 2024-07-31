@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <iostream>
 
-import abberation_fixer;
+import aberration_fixer;
 import config;
 import execution_plan_builder;
 import frame_extractor;
@@ -64,7 +64,7 @@ int main(int argc, char** argv)
             if (crop.has_value())
                 epb.addStep("Cropping.", "crop", cropImages, *crop);
 
-            //segmentEpb.addStep("Fixing chromatic abberation", "chroma", fixChromaticAbberation);
+            epb.addStep("Fixing chromatic abberation", "chroma", fixChromaticAberration);
             epb.addStep("Choosing best images.", "best", pickImages, pickerMethod);
             epb.addStep("Aligning images.", "aligned", alignImages);
             epb.addStep("Stacking images.", "stacked", stackImages);

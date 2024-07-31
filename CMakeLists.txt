@@ -29,7 +29,7 @@ add_executable(astro-stacker
 target_sources(astro-stacker
   PUBLIC
     FILE_SET CXX_MODULES FILES
-      abberation_fixer.cpp
+      aberration_fixer.cpp
       config.cpp
       execution_plan_builder.cpp
       frame_extractor.cpp

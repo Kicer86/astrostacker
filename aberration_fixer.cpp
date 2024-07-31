@@ -6,7 +6,7 @@ module;
 
 #include <opencv2/opencv.hpp>
 
-export module abberation_fixer;
+export module aberration_fixer;
 import utils;
 
 namespace
@@ -46,7 +46,7 @@ namespace
 }
 
 
-export std::vector<std::filesystem::path> fixChromaticAbberation(const std::filesystem::path& dir, std::span<const std::filesystem::path> images)
+export std::vector<std::filesystem::path> fixChromaticAberration(const std::filesystem::path& dir, std::span<const std::filesystem::path> images)
 {
     const auto fixed = processImages(images, dir, [](const auto& image)
     {
