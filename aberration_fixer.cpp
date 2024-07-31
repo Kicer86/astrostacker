@@ -38,7 +38,8 @@ namespace
 
         // Find homography and warp the channel
         const cv::Mat homography = cv::findHomography(srcPts, dstPts, cv::RANSAC);
-        const cv::Mat alignedChannel;
+
+        cv::Mat alignedChannel;
         cv::warpPerspective(channel, alignedChannel, homography, referenceChannel.size());
 
         return alignedChannel;
