@@ -48,6 +48,7 @@ int main(int argc, char** argv)
 
         const size_t segments = divideWithRoundUp(frames, segmentSize);
 
+        std::vector<ImagesList> allImages;
         for(int i = 0; i < segments; i++)
         {
             const auto segmentBegin = i * segmentSize;
@@ -73,7 +74,13 @@ int main(int argc, char** argv)
             if (backgroundThreshold >= 0)
                 epb.addPostStep("Applying transparency.", "transparent", applyTransparency, backgroundThreshold);
 
-            epb.execute(inputFiles);
+            const auto segmentFiles = epb.execute(inputFiles);
+            allImages.push_back(segmentFiles);
+        }
+
+        if (config.collect && segments > 1)
+        {
+
         }
     }
     catch(const std::runtime_error& error)

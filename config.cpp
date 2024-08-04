@@ -84,6 +84,7 @@ export struct Config
     const size_t stopAfter;
     const int backgroundThreshold;
     const bool doObjectDetection;
+    const bool collect;
 };
 
 
@@ -102,6 +103,7 @@ export Config readParams(int argc, char** argv)
         ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: 'median', number (1÷100%)")
         ("stop-after", po::value<size_t>()->default_value(0), "Stop processing after N steps. For 0 (default) process all")
         ("transparent-background", po::value<int>()->default_value(-1), "Post step: replace black regions with transparent after all steps (see --stop-after) are finished. Provide threshold as argument (0-255)")
+        ("collect", po::value<bool>()->default_value(false), "Post step: copy results from last step into final directory")
         ("input-files", po::value<std::vector<std::string>>(), "input files");
 
     po::variables_map vm;
@@ -132,6 +134,7 @@ export Config readParams(int argc, char** argv)
     const std::vector<std::string> inputFilesStr = vm["input-files"].as<std::vector<std::string>>();
     const auto stopAfter = vm["stop-after"].as<size_t>();
     const auto backgroundThreshold = vm["transparent-background"].as<int>();
+    const auto collect = vm["collect"].as<bool>();
 
     const std::vector<std::filesystem::path> inputFiles(inputFilesStr.begin(), inputFilesStr.end());
     const auto pickerMethod = readPickerMethod(best);
@@ -150,5 +153,6 @@ export Config readParams(int argc, char** argv)
         .stopAfter = stopAfter,
         .backgroundThreshold = backgroundThreshold,
         .doObjectDetection = doObjectDetection,
+        .collect = collect,
     };
 }
