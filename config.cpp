@@ -75,15 +75,15 @@ namespace
 
 export struct Config
 {
+    const std::vector<std::filesystem::path> inputFiles;
+    const std::filesystem::path wd;
     const std::optional<std::pair<int, int>> crop;
     const std::optional<std::pair<int, int>> split;
-    const size_t skip;
-    const bool doObjectDetection;
-    const std::vector<std::filesystem::path> inputFiles;
     const PickerMethod pickerMethod;
-    const std::filesystem::path wd;
+    const size_t skip;
     const size_t stopAfter;
     const int backgroundThreshold;
+    const bool doObjectDetection;
 };
 
 
@@ -141,14 +141,14 @@ export Config readParams(int argc, char** argv)
         throw std::invalid_argument("Invalid value for --use-best argument: " + best.as<std::string>() + ". Expected 'median' or % value 1÷100");
 
     return Config {
+        .inputFiles = inputFiles,
+        .wd = wd,
         .crop = crop,
         .split = split,
-        .skip = skip,
-        .doObjectDetection = doObjectDetection,
-        .inputFiles = inputFiles,
         .pickerMethod = *pickerMethod,
-        .wd = wd,
+        .skip = skip,
         .stopAfter = stopAfter,
-        .backgroundThreshold = backgroundThreshold
+        .backgroundThreshold = backgroundThreshold,
+        .doObjectDetection = doObjectDetection,
     };
 }
