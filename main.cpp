@@ -86,7 +86,7 @@ int main(int argc, char** argv)
 
             for (const auto& srcInfo: allImages)
             {
-                const auto srcPath = srcInfo.second;
+                const auto& srcPath = srcInfo.second;
                 const auto srcFileName = srcPath.filename();
                 const auto outputPath = allPath / (std::to_string(srcInfo.first) + "_" + srcFileName.string());
                 createLink(srcPath, outputPath);
