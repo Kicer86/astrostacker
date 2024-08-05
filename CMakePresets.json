@@ -7,7 +7,7 @@
   },
   "configurePresets": [
     {
-      "name": "Config Base",
+      "name": "config base",
       "hidden": true,
       "description": "Configure with vcpkg toolchain",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
@@ -16,17 +16,17 @@
       "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
     {
-      "name": "Debug Config",
-      "inherits": "Config Base",
-      "displayName": "Ninja Debug Config",
+      "name": "debug",
+      "inherits": "config base",
+      "displayName": "ninja debug config",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "Release Config",
-      "inherits": "Config Base",
-      "displayName": "Ninja Release Config",
+      "name": "release",
+      "inherits": "config base",
+      "displayName": "ninja release config",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
@@ -34,36 +34,36 @@
   ],
   "buildPresets": [
     {
-      "name": "Build Debug",
-      "configurePreset": "Debug Config",
-      "displayName": "Build Debug",
-      "description": "Build Debug with Ninja",
+      "name": "build debug",
+      "configurePreset": "debug",
+      "displayName": "build debug",
+      "description": "Build debug with Ninja",
       "configuration": "Debug"
     },
     {
-      "name": "Build Release",
-      "configurePreset": "Release Config",
-      "displayName": "Build Release",
-      "description": "Build Release with Ninja",
+      "name": "build release",
+      "configurePreset": "release",
+      "displayName": "build release",
+      "description": "Build release with Ninja",
       "configuration": "Release"
     }
   ],
   "testPresets": [
     {
-      "name": "Test Base",
+      "name": "test base",
       "hidden": true,
       "output": {"outputOnFailure": true},
       "execution": {"noTestsAction": "error", "stopOnFailure": false}
     },
     {
-      "name": "Test Debug",
-      "configurePreset": "Debug Config",
-      "inherits": "Test Base"
+      "name": "test debug",
+      "configurePreset": "debug",
+      "inherits": "test base"
     },
     {
-      "name": "Test Release",
-      "configurePreset": "Release Config",
-      "inherits": "Test Base"
+      "name": "test release",
+      "configurePreset": "release",
+      "inherits": "test base"
     }
   ]
 }

@@ -41,17 +41,17 @@ jobs:
 
     - name: Configure CMake
       if: matrix.os == 'windows-latest'
-      run: cmake --preset "Release Config"
+      run: cmake --preset "release"
 
     - name: Configure CMake
       if: matrix.os == 'ubuntu-24.04'
-      run: cmake --preset "Release Config"
+      run: cmake --preset "release"
       env:
         CXX: clang++
         CC: clang
 
     - name: Build
-      run: cmake --build --preset "Build Release"
+      run: cmake --build --preset "build release"
 
     - name: Test
-      run: ctest --preset "Test Release"
+      run: ctest --preset "test release"
