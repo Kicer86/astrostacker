@@ -48,6 +48,7 @@ int main(int argc, char** argv)
 
         const size_t segments = divideWithRoundUp(frames, segmentSize);
 
+        std::vector<std::pair<int, std::filesystem::path>> allImages;
         for(int i = 0; i < segments; i++)
         {
             const auto segmentBegin = i * segmentSize;
@@ -73,7 +74,23 @@ int main(int argc, char** argv)
             if (backgroundThreshold >= 0)
                 epb.addPostStep("Applying transparency.", "transparent", applyTransparency, backgroundThreshold);
 
-            epb.execute(inputFiles);
+            const auto segmentFiles = epb.execute(inputFiles);
+            for (const auto& path: segmentFiles)
+                allImages.emplace_back(i, path);
+        }
+
+        if (config.collect && segments > 1)
+        {
+            const auto allPath = wd.path() / "all";
+            std::filesystem::create_directory(allPath);
+
+            for (const auto& srcInfo: allImages)
+            {
+                const auto& srcPath = srcInfo.second;
+                const auto srcFileName = srcPath.filename();
+                const auto outputPath = allPath / (std::to_string(srcInfo.first) + "_" + srcFileName.string());
+                createLink(srcPath, outputPath);
+            }
         }
     }
     catch(const std::runtime_error& error)
