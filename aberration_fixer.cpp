@@ -11,16 +11,27 @@ import utils;
 
 namespace
 {
+    cv::Mat enhanceContrast(const cv::Mat& image)
+    {
+        cv::Mat enhanced;
+        cv::Ptr<cv::CLAHE> clahe = cv::createCLAHE();
+        clahe->apply(image, enhanced);
+        return enhanced;
+    }
+
     cv::Mat alignChannel(const cv::Mat& referenceChannel, const cv::Mat& channel)
     {
+        cv::Mat enhancedRef = enhanceContrast(referenceChannel);
+        cv::Mat enhancedCh = enhanceContrast(channel);
+
         // ORB detector and matcher
         cv::Ptr<cv::ORB> orb = cv::ORB::create();
         std::vector<cv::KeyPoint> kpRef, kp;
         cv::Mat desRef, des;
 
         // Detect and compute features for reference and target channels
-        orb->detectAndCompute(referenceChannel, cv::noArray(), kpRef, desRef);
-        orb->detectAndCompute(channel, cv::noArray(), kp, des);
+        orb->detectAndCompute(enhancedRef, cv::noArray(), kpRef, desRef);
+        orb->detectAndCompute(enhancedCh, cv::noArray(), kp, des);
 
         // Brute-force matcher with Hamming distance
         cv::BFMatcher bf(cv::NORM_HAMMING, true);
