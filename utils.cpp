@@ -49,10 +49,24 @@ export template<typename T, typename C>
 void forEach(T items, C&& c)
 {
     const int size = static_cast<int>(items.size());
+    std::exception_ptr exception = nullptr;
 
     #pragma omp parallel for                        // TODO: visual studio requires int for loops, clean this up in the future
     for(int i = 0; i < size; i++)
-        c(static_cast<size_t>(i));
+    {
+        try
+        {
+            c(static_cast<size_t>(i));
+        }
+        catch (...)
+        {
+            exception = std::current_exception();
+            #pragma omp cancel for
+        }
+    }
+
+    if (exception)
+        std::rethrow_exception(exception);
 }
 
 
