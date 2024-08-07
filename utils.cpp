@@ -61,7 +61,11 @@ void forEach(T items, C&& c)
         catch (...)
         {
             exception = std::current_exception();
+#ifdef MSVC
+            break;
+#else
             #pragma omp cancel for
+#endif
         }
     }
 

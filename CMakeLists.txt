@@ -44,6 +44,10 @@ target_sources(astro-stacker
       utils.cpp
 )
 
+if (MSVC)
+    target_compile_definitions(astro-stacker PRIVATE MSVC)       # enable OpenMP
+endif()
+
 target_link_libraries(astro-stacker
     PRIVATE
         Boost::program_options
