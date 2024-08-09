@@ -5,6 +5,7 @@ module;
 #include <format>
 #include <opencv2/opencv.hpp>
 #include <omp.h>
+#include <spdlog/spdlog.h>
 
 export module frame_extractor;
 import utils;
@@ -68,6 +69,7 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
     const auto file = files.front();
     const auto frames = lastFrame - firstFrame;
 
+    std::vector<std::pair<size_t, size_t>> segments;
     std::vector<std::filesystem::path> paths;
 
     // split frames among threads. It would be nice to ure regular 'parallel for' but each thread needs to get
@@ -75,28 +77,29 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
     #pragma omp parallel
     {
         const auto threads = static_cast<size_t>(omp_get_num_threads());
-        const auto thread = static_cast<size_t>(omp_get_thread_num());
-        const auto group_size = divideWithRoundUp(frames, threads);
-
-        // Thread * frames-to-process-by-each-thread needs to be at least equal to number of frames
-        assert(threads * group_size >= frames);
 
         #pragma omp master
         {
-            paths.resize(static_cast<size_t>(frames));
+            segments = utils::split({firstFrame, lastFrame}, threads);
+            paths.resize(frames);
         }
         #pragma omp barrier
 
-        const auto threadFirstFrame = firstFrame + std::min(frames, group_size * thread);
-        const auto threadLastFrame = firstFrame + std::min(frames, threadFirstFrame + group_size);
+        const auto thread = static_cast<size_t>(omp_get_thread_num());
 
-        if (threadLastFrame - threadFirstFrame > 0)
+        if (thread < segments.size())
         {
+            const auto& [threadFirstFrame, threadLastFrame] = segments[thread];
+
+            spdlog::debug("Thread {}/{} got frames {} - {} ({} frames)", thread, threads, threadFirstFrame, threadLastFrame - 1, threadLastFrame - threadFirstFrame);
+
             const auto thread_paths = extractFrames(file, dir, threadFirstFrame, threadLastFrame);
 
             for(size_t out_f = threadFirstFrame, in_f = 0; out_f < threadLastFrame; out_f++, in_f++)
                 paths[out_f - firstFrame] = thread_paths[in_f];
         }
+        else
+            spdlog::warn("Thread {} has nothing to do", thread);
     }
 
     return paths;

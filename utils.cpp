@@ -7,6 +7,8 @@ module;
 #include <ranges>
 #include <span>
 #include <opencv2/opencv.hpp>
+#include <spdlog/spdlog.h>
+
 
 export module utils;
 
@@ -38,9 +40,9 @@ auto measureTime(Func func, Args&&... args)
 export template <typename Func, typename... Args>
 auto measureTimeWithMessage(std::string_view startMessage, Func func, Args&&... args)
 {
-    std::cout << startMessage << std::flush;
+    spdlog::info(startMessage);
     auto [time, result] = measureTime(func, std::forward<Args>(args)...);
-    std::cout << " Execution time: " << time << " ms" << std::endl;
+    spdlog::info("Execution time: {}ms", time);
     return result;
 }
 
@@ -201,4 +203,27 @@ private:
 export size_t divideWithRoundUp(size_t lhs, size_t rhs)
 {
     return (lhs + rhs - 1) / rhs;
+}
+
+namespace utils
+{
+    export std::vector<std::pair<size_t, size_t>> split(const std::pair<size_t, size_t>& input, std::size_t groups)
+    {
+        const auto& first = input.first;
+        const auto& last = input.second;
+        const auto elements = last - first;
+        const auto groupSize = divideWithRoundUp(elements, groups);
+        std::vector<std::pair<size_t, size_t>> result;
+
+        for (size_t i = 0; i < groups; i++)
+        {
+            const auto groupFirst = std::min(last, first + groupSize * i);
+            const auto groupLast = std::min(last, groupFirst + groupSize);
+
+            if ((groupLast - groupFirst) > 0)
+                result.emplace_back(groupFirst, groupLast);
+        }
+
+        return result;
+    }
 }

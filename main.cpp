@@ -2,7 +2,8 @@
 #include <filesystem>
 #include <iostream>
 #include <opencv2/opencv.hpp>
-
+#include <spdlog/spdlog.h>
+#include <spdlog/cfg/env.h>
 
 import aberration_fixer;
 import config;
@@ -21,6 +22,8 @@ import utils;
 
 int main(int argc, char** argv)
 {
+    spdlog::cfg::load_env_levels();
+
     try
     {
         const auto config = readParams(argc, argv);
@@ -47,12 +50,12 @@ int main(int argc, char** argv)
         const size_t framesInSegmentToBeTaken = split? split->first : frames;
         const size_t framesInSegmentToBeIgnored = split? split->second : 0;
         const size_t segmentSize = framesInSegmentToBeTaken + framesInSegmentToBeIgnored;
-
         const size_t segments = divideWithRoundUp(frames, segmentSize);
 
         std::vector<std::pair<int, std::filesystem::path>> allImages;
         for(int i = 0; i < segments; i++)
         {
+            spdlog::info("Processing segment {} of {}", i + 1, segments);
             const auto segmentBegin = i * segmentSize;
             const auto segmentEnd = std::min(segmentBegin + segmentSize, lastFrame);
 
@@ -102,7 +105,7 @@ int main(int argc, char** argv)
     }
     catch (const std::invalid_argument& error)
     {
-        std::cerr << "Error: " << error.what() << "\n";
+        spdlog::error(error.what());
         return 1;
     }
     catch (const std::logic_error& error)
@@ -112,12 +115,12 @@ int main(int argc, char** argv)
     }
     catch (const cv::Exception& error)
     {
-        std::cerr << "Error: " << error.what() << "\n";
+        spdlog::error(error.what());
         return 1;
     }
     catch(...)
     {
-        std::cerr << "Fail: Unhandled exception\n";
+        spdlog::error("Fail: Unhandled exception");
         return 1;
     }
 
