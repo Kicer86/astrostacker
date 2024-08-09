@@ -1,6 +1,8 @@
 
 #include <filesystem>
 #include <iostream>
+#include <opencv2/opencv.hpp>
+
 
 import aberration_fixer;
 import config;
@@ -93,17 +95,22 @@ int main(int argc, char** argv)
             }
         }
     }
-    catch(const std::runtime_error& error)
+    catch (const std::runtime_error& error)
     {
         std::cout << error.what() << "\n";
         return 1;
     }
-    catch(const std::invalid_argument& error)
+    catch (const std::invalid_argument& error)
     {
         std::cerr << "Error: " << error.what() << "\n";
         return 1;
     }
-    catch(const std::logic_error& error)
+    catch (const std::logic_error& error)
+    {
+        std::cerr << "Error: " << error.what() << "\n";
+        return 1;
+    }
+    catch (const cv::Exception& error)
     {
         std::cerr << "Error: " << error.what() << "\n";
         return 1;
