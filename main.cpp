@@ -50,7 +50,6 @@ int main(int argc, char** argv)
         const size_t framesInSegmentToBeTaken = split? split->first : frames;
         const size_t framesInSegmentToBeIgnored = split? split->second : 0;
         const size_t segmentSize = framesInSegmentToBeTaken + framesInSegmentToBeIgnored;
-
         const size_t segments = divideWithRoundUp(frames, segmentSize);
 
         std::vector<std::pair<int, std::filesystem::path>> allImages;
