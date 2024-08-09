@@ -205,7 +205,8 @@ export size_t divideWithRoundUp(size_t lhs, size_t rhs)
     return (lhs + rhs - 1) / rhs;
 }
 
-
+namespace utils
+{
 export std::vector<std::pair<size_t, size_t>> split(const std::pair<size_t, size_t>& input, std::size_t groups)
 {
     const auto& first = input.first;
@@ -224,4 +225,5 @@ export std::vector<std::pair<size_t, size_t>> split(const std::pair<size_t, size
     }
 
     return result;
+}
 }

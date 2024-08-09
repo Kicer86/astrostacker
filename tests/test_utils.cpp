@@ -49,7 +49,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(SplitTest, split)
 {
     const auto& [first, last, groups, expectedResult] = GetParam();
-    const auto results = split(std::pair{first, last}, groups);
+    const auto results = utils::split(std::pair{first, last}, groups);
 
     EXPECT_EQ(results, expectedResult);
 }
