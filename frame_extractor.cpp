@@ -91,7 +91,7 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
         const auto threadFirstFrame = firstFrame + std::min(frames, group_size * thread);
         const auto threadLastFrame = firstFrame + std::min(frames, threadFirstFrame + group_size);
 
-        spdlog::debug("Thread {}/{} got frames {} - {}", thread, threads, threadFirstFrame, threadLastFrame);
+        spdlog::debug("Thread {}/{} got frames {} - {} ({} frames)", thread, threads, threadFirstFrame, threadLastFrame - 1, threadLastFrame - threadFirstFrame);
         if (threadLastFrame - threadFirstFrame > 0)
         {
             const auto thread_paths = extractFrames(file, dir, threadFirstFrame, threadLastFrame);
