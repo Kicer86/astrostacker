@@ -216,7 +216,7 @@ export std::vector<std::pair<size_t, size_t>> split(const std::pair<size_t, size
 
     for (size_t i = 0; i < groups; i++)
     {
-        const auto groupFirst = first + std::min(last, groupSize * i);
+        const auto groupFirst = std::min(last, first + groupSize * i);
         const auto groupLast = std::min(last, groupFirst + groupSize);
 
         if ((groupLast - groupFirst) > 0)

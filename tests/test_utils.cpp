@@ -30,6 +30,22 @@ INSTANTIATE_TEST_SUITE_P(
 );
 
 
+INSTANTIATE_TEST_SUITE_P(
+    EdgeCases, SplitTest,
+    testing::Values(
+        // Unevent split
+        SplitParam{18, 28, 3, {std::pair<size_t, size_t>{18, 22},
+                               std::pair<size_t, size_t>{22, 26},
+                               std::pair<size_t, size_t>{26, 28}}},
+        // Not enought elements for all groups
+        SplitParam{11, 15, 13, {std::pair<size_t, size_t>{11, 12},
+                                std::pair<size_t, size_t>{12, 13},
+                                std::pair<size_t, size_t>{13, 14},
+                                std::pair<size_t, size_t>{14, 15}}}
+    )
+);
+
+
 TEST_P(SplitTest, split)
 {
     const auto& [first, last, groups, expectedResult] = GetParam();
