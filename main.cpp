@@ -55,6 +55,7 @@ int main(int argc, char** argv)
         std::vector<std::pair<int, std::filesystem::path>> allImages;
         for(int i = 0; i < segments; i++)
         {
+            spdlog::info("Processing segment {} of {}", i + 1, segments);
             const auto segmentBegin = i * segmentSize;
             const auto segmentEnd = std::min(segmentBegin + segmentSize, lastFrame);
 
