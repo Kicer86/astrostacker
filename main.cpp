@@ -4,6 +4,8 @@
 #include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
 #include <spdlog/cfg/env.h>
+#include <omp.h>
+
 
 import aberration_fixer;
 import config;
@@ -37,6 +39,14 @@ int main(int argc, char** argv)
         const auto& pickerMethod = config.pickerMethod;
         const auto& stopAfter = config.stopAfter;
         const auto& backgroundThreshold = config.backgroundThreshold;
+        const auto& threads = config.threads;
+
+        const auto maxThreads = omp_get_max_threads();
+        auto useThreads = threads > 0? threads: maxThreads + threads;
+        useThreads = std::clamp(useThreads, 1, maxThreads);
+
+        spdlog::info("Using {} threads", useThreads);
+        omp_set_num_threads(useThreads);
 
         const auto& inputFile = config.inputFiles.front();
 
