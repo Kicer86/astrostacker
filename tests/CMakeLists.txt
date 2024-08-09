@@ -3,6 +3,7 @@ find_package(GTest)
 
 find_package(Boost REQUIRED COMPONENTS program_options)
 find_package(OpenCV REQUIRED)
+find_package(spdlog REQUIRED)
 
 add_executable(astro-stacker-tests
     test_config.cpp
@@ -26,6 +27,7 @@ target_link_libraries(astro-stacker-tests
         GTest::gtest_main
         Boost::program_options
         opencv_tracking
+        spdlog::spdlog
 )
 
 add_test(
