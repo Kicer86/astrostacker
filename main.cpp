@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <iostream>
 #include <opencv2/opencv.hpp>
-
+#include <spdlog/spdlog.h>
 
 import aberration_fixer;
 import config;
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
     }
     catch (const std::invalid_argument& error)
     {
-        std::cerr << "Error: " << error.what() << "\n";
+        spdlog::error(error.what());
         return 1;
     }
     catch (const std::logic_error& error)
@@ -112,12 +112,12 @@ int main(int argc, char** argv)
     }
     catch (const cv::Exception& error)
     {
-        std::cerr << "Error: " << error.what() << "\n";
+        spdlog::error(error.what());
         return 1;
     }
     catch(...)
     {
-        std::cerr << "Fail: Unhandled exception\n";
+        spdlog::error("Fail: Unhandled exception");
         return 1;
     }
 

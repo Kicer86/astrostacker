@@ -7,6 +7,8 @@ module;
 #include <ranges>
 #include <span>
 #include <opencv2/opencv.hpp>
+#include <spdlog/spdlog.h>
+
 
 export module utils;
 
@@ -38,9 +40,9 @@ auto measureTime(Func func, Args&&... args)
 export template <typename Func, typename... Args>
 auto measureTimeWithMessage(std::string_view startMessage, Func func, Args&&... args)
 {
-    std::cout << startMessage << std::flush;
+    spdlog::info(startMessage);
     auto [time, result] = measureTime(func, std::forward<Args>(args)...);
-    std::cout << " Execution time: " << time << " ms" << std::endl;
+    spdlog::info("Execution time: {}ms", time);
     return result;
 }
 
