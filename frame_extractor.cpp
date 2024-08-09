@@ -89,7 +89,7 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
         #pragma omp barrier
 
         const auto threadFirstFrame = firstFrame + std::min(frames, group_size * thread);
-        const auto threadLastFrame = firstFrame + std::min(frames, threadFirstFrame + group_size);
+        const auto threadLastFrame = std::min(lastFrame, threadFirstFrame + group_size);
 
         spdlog::debug("Thread {}/{} got frames {} - {} ({} frames)", thread, threads, threadFirstFrame, threadLastFrame - 1, threadLastFrame - threadFirstFrame);
         if (threadLastFrame - threadFirstFrame > 0)
