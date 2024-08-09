@@ -21,6 +21,7 @@ add_subdirectory(tests)
 find_package(Boost REQUIRED COMPONENTS program_options)
 find_package(OpenCV REQUIRED)
 find_package(OpenMP REQUIRED)
+find_package(spdlog REQUIRED)
 
 add_executable(astro-stacker
     main.cpp
@@ -55,4 +56,5 @@ target_link_libraries(astro-stacker
         opencv_videoio
         opencv_photo
         OpenMP::OpenMP_CXX
+        spdlog::spdlog
 )

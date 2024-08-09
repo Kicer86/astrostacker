@@ -5,6 +5,7 @@ module;
 #include <format>
 #include <opencv2/opencv.hpp>
 #include <omp.h>
+#include <spdlog/spdlog.h>
 
 export module frame_extractor;
 import utils;
@@ -88,8 +89,9 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
         #pragma omp barrier
 
         const auto threadFirstFrame = firstFrame + std::min(frames, group_size * thread);
-        const auto threadLastFrame = firstFrame + std::min(frames, threadFirstFrame + group_size);
+        const auto threadLastFrame = std::min(lastFrame, threadFirstFrame + group_size);
 
+        spdlog::debug("Thread {}/{} got frames {} - {} ({} frames)", thread, threads, threadFirstFrame, threadLastFrame - 1, threadLastFrame - threadFirstFrame);
         if (threadLastFrame - threadFirstFrame > 0)
         {
             const auto thread_paths = extractFrames(file, dir, threadFirstFrame, threadLastFrame);
@@ -97,6 +99,8 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
             for(size_t out_f = threadFirstFrame, in_f = 0; out_f < threadLastFrame; out_f++, in_f++)
                 paths[out_f - firstFrame] = thread_paths[in_f];
         }
+        else
+            spdlog::warn("Thread {} has nothing to do", thread);
     }
 
     return paths;
