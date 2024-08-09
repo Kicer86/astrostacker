@@ -100,7 +100,7 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
                 paths[out_f - firstFrame] = thread_paths[in_f];
         }
         else
-            spdlog::warn("Thread {} has nothing to do");
+            spdlog::warn("Thread {} has nothing to do", thread);
     }
 
     return paths;
