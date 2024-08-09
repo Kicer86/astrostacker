@@ -3,6 +3,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
+#include <spdlog/cfg/env.h>
 
 import aberration_fixer;
 import config;
@@ -21,6 +22,8 @@ import utils;
 
 int main(int argc, char** argv)
 {
+    spdlog::cfg::load_env_levels();
+
     try
     {
         const auto config = readParams(argc, argv);
