@@ -204,3 +204,24 @@ export size_t divideWithRoundUp(size_t lhs, size_t rhs)
 {
     return (lhs + rhs - 1) / rhs;
 }
+
+
+export std::vector<std::pair<size_t, size_t>> split(const std::pair<size_t, size_t>& input, std::size_t groups)
+{
+    const auto& first = input.first;
+    const auto& last = input.second;
+    const auto elements = last - first;
+    const auto groupSize = divideWithRoundUp(elements, groups);
+    std::vector<std::pair<size_t, size_t>> result;
+
+    for (size_t i = 0; i < groups; i++)
+    {
+        const auto groupFirst = first + std::min(last, groupSize * i);
+        const auto groupLast = std::min(last, groupFirst + groupSize);
+
+        if ((groupLast - groupFirst) > 0)
+            result.emplace_back(groupFirst, groupLast);
+    }
+
+    return result;
+}

@@ -7,6 +7,7 @@ find_package(spdlog REQUIRED)
 
 add_executable(astro-stacker-tests
     test_config.cpp
+    test_utils.cpp
 )
 
 
