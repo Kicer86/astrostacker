@@ -83,6 +83,7 @@ export struct Config
     const size_t skip;
     const size_t stopAfter;
     const int backgroundThreshold;
+    const int threads;
     const bool doObjectDetection;
     const bool collect;
 };
@@ -96,6 +97,7 @@ export Config readParams(int argc, char** argv)
     desc.add_options()
         ("help", "produce help message")
         ("working-dir", po::value<std::string>(), "set working directory")
+        ("threads", po::value<int>()->default_value(0), "Set number of threads to use. 0 means all, negative values mean all + value. (For example -1 mean all but one)")
         ("crop", po::value<std::string>(), "crop images to given size. Example: --crop 1000x800")
         ("split", po::value<std::string>(), "Split video into segments. Provide segment lenght and gap in frames as argument. Example: --split 120,40")
         ("skip", po::value<size_t>()->default_value(0), "Skip n frames from the video begining. Example: --skip 60")
@@ -126,6 +128,7 @@ export Config readParams(int argc, char** argv)
         throw std::invalid_argument("Provide input files");
 
     const std::filesystem::path wd_option = vm["working-dir"].as<std::string>();
+    const auto threads = vm["threads"].as<int>();
     const auto crop = readCrop(vm["crop"]);
     const auto split = readSegments(vm["split"]);
     const auto skip = vm["skip"].as<size_t>();
@@ -152,6 +155,7 @@ export Config readParams(int argc, char** argv)
         .skip = skip,
         .stopAfter = stopAfter,
         .backgroundThreshold = backgroundThreshold,
+        .threads = threads,
         .doObjectDetection = doObjectDetection,
         .collect = collect,
     };
