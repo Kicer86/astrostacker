@@ -10,6 +10,7 @@
 import aberration_fixer;
 import config;
 import execution_plan_builder;
+import file_manager;
 import frame_extractor;
 import images_aligner;
 import images_cropper;
@@ -41,6 +42,7 @@ int main(int argc, char** argv)
         const auto& backgroundThreshold = config.backgroundThreshold;
         const auto& threads = config.threads;
         const auto& debugSteps = config.debugSteps;
+        const auto& cleanup = config.cleanup;
 
         const auto maxThreads = omp_get_max_threads();
         auto useThreads = threads > 0? threads: maxThreads + threads;
@@ -63,6 +65,9 @@ int main(int argc, char** argv)
         const size_t segmentSize = framesInSegmentToBeTaken + framesInSegmentToBeIgnored;
         const size_t segments = Utils::divideWithRoundUp(frames, segmentSize);
 
+        FileManager fm(cleanup);
+        fm.ignore(config.inputFiles);
+
         std::vector<std::pair<int, std::filesystem::path>> allImages;
         for(int i = 0; i < segments; i++)
         {
@@ -72,7 +77,7 @@ int main(int argc, char** argv)
 
             Utils::WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i));
 
-            ExecutionPlanBuilder epb(segmentWorkingDir, stopAfter);
+            ExecutionPlanBuilder epb(segmentWorkingDir, fm, stopAfter);
             epb.addStep("Extracting frames from video.", "images", extractFrames, segmentBegin, segmentEnd);
 
             if (doObjectDetection)

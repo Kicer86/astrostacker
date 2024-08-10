@@ -7,6 +7,7 @@ module;
 #include <vector>
 
 export module execution_plan_builder;
+import ifile_manager;
 import utils;
 
 
@@ -17,8 +18,9 @@ export using Operation = std::function<ImagesList(ImagesView)>;
 export class ExecutionPlanBuilder
 {
 public:
-    ExecutionPlanBuilder(const Utils::WorkingDir& wd, size_t maxSteps = std::numeric_limits<size_t>::max())
+    ExecutionPlanBuilder(const Utils::WorkingDir& wd, IFileManager& fileManager, size_t maxSteps = std::numeric_limits<size_t>::max())
         : m_wd(wd)
+        , m_fileManager(fileManager)
         , m_maxSteps(maxSteps == 0? std::numeric_limits<size_t>::max(): maxSteps)
     {
 
@@ -63,7 +65,9 @@ public:
 
         for(const auto& op: m_ops)
         {
+            const auto inputFiles = imagesList;
             imagesList = Utils::measureTimeWithMessage(op.first, op.second, imagesList);
+            m_fileManager.remove(inputFiles);
 
             steps--;
             if (steps == 0)
@@ -81,5 +85,6 @@ private:
     std::vector<std::pair<std::string, Operation>> m_ops;
     std::vector<std::pair<std::string, Operation>> m_postOps;
     Utils::WorkingDir m_wd;
+    IFileManager& m_fileManager;
     const size_t m_maxSteps;
 };
