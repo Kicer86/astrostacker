@@ -60,7 +60,7 @@ namespace
 
 export std::vector<std::filesystem::path> fixChromaticAberration(const std::filesystem::path& dir, std::span<const std::filesystem::path> images)
 {
-    const auto fixed = processImages(images, dir, [](const auto& image)
+    const auto fixed = utils::processImages(images, dir, [](const auto& image)
     {
         // Split the image into B, G, R channels
         std::vector<cv::Mat> channels(3);

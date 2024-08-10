@@ -13,7 +13,7 @@ import utils;
 
 export std::vector<std::filesystem::path> cropImages(const std::filesystem::path& wd, std::span<const std::filesystem::path> images, const std::pair<int, int>& crop)
 {
-    const std::vector<std::filesystem::path> croppedImages = processImages(images, wd, [&crop](const cv::Mat& image)
+    const std::vector<std::filesystem::path> croppedImages = utils::processImages(images, wd, [&crop](const cv::Mat& image)
     {
         const int height = image.rows;
         const int width = image.cols;
