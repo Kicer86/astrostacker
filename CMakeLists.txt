@@ -33,7 +33,9 @@ target_sources(astro-stacker
       aberration_fixer.cpp
       config.cpp
       execution_plan_builder.cpp
+      file_manager.cpp
       frame_extractor.cpp
+      ifile_manager.cpp
       images_aligner.cpp
       images_cropper.cpp
       images_enhancer.cpp
