@@ -40,6 +40,7 @@ int main(int argc, char** argv)
         const auto& stopAfter = config.stopAfter;
         const auto& backgroundThreshold = config.backgroundThreshold;
         const auto& threads = config.threads;
+        const auto& debugSteps = config.debugSteps;
 
         const auto maxThreads = omp_get_max_threads();
         auto useThreads = threads > 0? threads: maxThreads + threads;
@@ -75,7 +76,7 @@ int main(int argc, char** argv)
             epb.addStep("Extracting frames from video.", "images", extractFrames, segmentBegin, segmentEnd);
 
             if (doObjectDetection)
-                epb.addStep("Extracting main object.", "object", extractObject);
+                epb.addStep("Extracting main object.", "object", extractObject, debugSteps);
 
             if (crop.has_value())
                 epb.addStep("Cropping.", "crop", cropImages, *crop);
