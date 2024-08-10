@@ -81,7 +81,7 @@ int main(int argc, char** argv)
             if (crop.has_value())
                 epb.addStep("Cropping.", "crop", cropImages, *crop);
 
-            epb.addStep("Fixing chromatic abberation", "chroma", fixChromaticAberration);
+            epb.addStep("Fixing chromatic abberation", "chroma", fixChromaticAberration, debugSteps);
             epb.addStep("Choosing best images.", "best", pickImages, pickerMethod);
             epb.addStep("Aligning images.", "aligned", alignImages);
             epb.addStep("Stacking images.", "stacked", stackImages);
