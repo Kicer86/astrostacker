@@ -74,7 +74,7 @@ export std::vector<std::filesystem::path> extractObject(const std::filesystem::p
     std::filesystem::create_directory(contoursDir);
     std::filesystem::create_directory(objectsDir);
 
-    const auto extractedObjects = processImages(images, std::array{objectsDir, contoursDir}, [](const cv::Mat& image)
+    const auto extractedObjects = Utils::processImages(images, std::array{objectsDir, contoursDir}, [](const cv::Mat& image)
     {
         const auto [object, contours] = findBrightestObject(image);
 

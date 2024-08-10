@@ -28,9 +28,9 @@ int main(int argc, char** argv)
 
     try
     {
-        const auto config = readParams(argc, argv);
+        const auto config = Config::readParams(argc, argv);
 
-        WorkingDir wd(config.wd);
+        Utils::WorkingDir wd(config.wd);
         const auto& inputFiles = config.inputFiles;
         const auto& skip = config.skip;
         const auto& split = config.split;
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
         const size_t framesInSegmentToBeTaken = split? split->first : frames;
         const size_t framesInSegmentToBeIgnored = split? split->second : 0;
         const size_t segmentSize = framesInSegmentToBeTaken + framesInSegmentToBeIgnored;
-        const size_t segments = divideWithRoundUp(frames, segmentSize);
+        const size_t segments = Utils::divideWithRoundUp(frames, segmentSize);
 
         std::vector<std::pair<int, std::filesystem::path>> allImages;
         for(int i = 0; i < segments; i++)
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
             const auto segmentBegin = i * segmentSize;
             const auto segmentEnd = std::min(segmentBegin + segmentSize, lastFrame);
 
-            WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i));
+            Utils::WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i));
 
             ExecutionPlanBuilder epb(segmentWorkingDir, stopAfter);
             epb.addStep("Extracting frames from video.", "images", extractFrames, segmentBegin, segmentEnd);
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
                 const auto& srcPath = srcInfo.second;
                 const auto srcFileName = srcPath.filename();
                 const auto outputPath = allPath / (std::to_string(srcInfo.first) + "_" + srcFileName.string());
-                createLink(srcPath, outputPath);
+                Utils::createLink(srcPath, outputPath);
             }
         }
     }

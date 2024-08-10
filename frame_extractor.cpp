@@ -80,7 +80,7 @@ export std::vector<std::filesystem::path> extractFrames(const std::filesystem::p
 
         #pragma omp master
         {
-            segments = utils::split({firstFrame, lastFrame}, threads);
+            segments = Utils::split({firstFrame, lastFrame}, threads);
             paths.resize(frames);
         }
         #pragma omp barrier

@@ -56,7 +56,7 @@ export std::vector<std::filesystem::path> pickImages(const std::filesystem::path
     const size_t count = images.size();
     score.resize(count);
 
-    forEach(images, [&](const size_t i)
+    Utils::forEach(images, [&](const size_t i)
     {
         const cv::Mat image = cv::imread(images[i].string());
         const double s = computeSharpness(image);
@@ -76,7 +76,7 @@ export std::vector<std::filesystem::path> pickImages(const std::filesystem::path
     {
         const auto top = selectTop(score);
         const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
-        const auto topPaths = createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
+        const auto topPaths = Utils::createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
 
         return topPaths;
     }
@@ -84,7 +84,7 @@ export std::vector<std::filesystem::path> pickImages(const std::filesystem::path
     {
         const auto top = selectTop(score, *topMethod);
         const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
-        const auto topPaths = createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
+        const auto topPaths = Utils::createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
 
         return topPaths;
     }

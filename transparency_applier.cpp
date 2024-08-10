@@ -14,7 +14,7 @@ import utils;
 
 export std::vector<std::filesystem::path> applyTransparency(const std::filesystem::path& dir, const std::span<const std::filesystem::path> images, int threshold)
 {
-    const std::vector<std::filesystem::path> transparent = processImages(images, dir, [&threshold](const cv::Mat& image)
+    const std::vector<std::filesystem::path> transparent = Utils::processImages(images, dir, [&threshold](const cv::Mat& image)
     {
         cv::Mat rgbaImage;
         cv::cvtColor(image, rgbaImage, cv::COLOR_BGR2BGRA);
