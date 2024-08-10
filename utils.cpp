@@ -12,7 +12,7 @@ module;
 
 export module utils;
 
-namespace utils
+namespace Utils
 {
     class Timer
     {
