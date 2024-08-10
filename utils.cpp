@@ -113,6 +113,20 @@ namespace Utils
         return resultPaths;
     }
 
+    export template<typename T, std::size_t N>
+    requires std::invocable<T, const cv::Mat &> && (N > 0)
+    std::vector<std::filesystem::path> processImages(std::span<const std::filesystem::path> images, const std::array<std::filesystem::path, N>& dirs, bool debug, T&& op)
+    {
+        if (debug)
+            return processImages(images, std::array{dirs}, op);
+        else
+            return processImages(images, std::array{dirs.front()}, [op](const auto& input)
+            {
+                const auto result = op(input);
+                return result.front();
+            });
+    }
+
 
     export template<typename T>
     requires std::invocable<T, const cv::Mat &>
