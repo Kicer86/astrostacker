@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
     try
     {
-        const auto config = readParams(argc, argv);
+        const auto config = Config::readParams(argc, argv);
 
         utils::WorkingDir wd(config.wd);
         const auto& inputFiles = config.inputFiles;
