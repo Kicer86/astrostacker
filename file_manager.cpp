@@ -3,6 +3,7 @@ module;
 
 #include <filesystem>
 #include <set>
+#include <span>
 
 export module file_manager;
 import ifile_manager;

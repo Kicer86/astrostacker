@@ -2,6 +2,7 @@
 module;
 
 #include <filesystem>
+#include <span>
 
 export module ifile_manager;
 
