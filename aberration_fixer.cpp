@@ -66,10 +66,6 @@ export std::vector<std::filesystem::path> fixChromaticAberration(const std::file
     const auto fDir = dir / "fixed";
 
     const std::array dirs{fDir, rDir, gDir, bDir};
-
-    for (const auto& dir: dirs)
-        std::filesystem::create_directory(dir);
-
     const auto fixed = Utils::processImages(images, dirs, debug, [](const auto& image)
     {
         // Split the image into B, G, R channels

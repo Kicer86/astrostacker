@@ -117,14 +117,25 @@ namespace Utils
     requires std::invocable<T, const cv::Mat &> && (N > 0)
     std::vector<std::filesystem::path> processImages(std::span<const std::filesystem::path> images, const std::array<std::filesystem::path, N>& dirs, bool debug, T&& op)
     {
+
         if (debug)
+        {
+            for (const auto& dir: dirs)
+                std::filesystem::create_directory(dir);
+
             return processImages(images, std::array{dirs}, op);
+        }
         else
-            return processImages(images, std::array{dirs.front()}, [op](const auto& input)
+        {
+            const auto firstDir = dirs.front();
+            const auto parentDir = firstDir.parent_path();
+
+            return processImages(images, std::array{parentDir}, [op](const auto& input)
             {
                 const auto result = op(input);
                 return result.front();
             });
+        }
     }
 
 
