@@ -52,11 +52,11 @@ namespace Utils
     export template<typename T, typename C>
     void forEach(T items, C&& c)
     {
-        const int size = static_cast<int>(items.size());
+        const auto size = items.size();
         std::exception_ptr exception = nullptr;
 
-        #pragma omp parallel for                        // TODO: visual studio requires int for loops, clean this up in the future
-        for(int i = 0; i < size; i++)
+        #pragma omp parallel for                        
+        for(size_t i = 0; i < size; i++)
         {
             try
             {

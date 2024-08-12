@@ -85,7 +85,7 @@ namespace
         transformations.resize(imagesCount);
 
         #pragma omp parallel for
-        for (int i = 1; i < imagesCount; i++)
+        for (size_t i = 1; i < imagesCount; i++)
         {
             const auto& next = images[i];
             const auto image = cv::imread(next.string());
@@ -126,7 +126,7 @@ export std::vector<std::filesystem::path> alignImages(const std::filesystem::pat
     alignedImages.resize(imagesCount);
 
     #pragma omp parallel for
-    for (int i = 0; i < imagesCount; i++)
+    for (size_t i = 0; i < imagesCount; i++)
     {
         const auto& imagePath = images[i];
         const auto imageFilename = imagePath.filename().string();
