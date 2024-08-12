@@ -46,7 +46,8 @@ target_sources(astro-stacker
 )
 
 if (MSVC)
-    target_compile_definitions(astro-stacker PRIVATE MSVC)       # enable OpenMP
+    target_compile_definitions(astro-stacker PRIVATE MSVC)       
+    target_compile_options(astro-stacker PRIVATE /openmp:llvm)
 endif()
 
 target_link_libraries(astro-stacker

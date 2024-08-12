@@ -46,7 +46,7 @@ namespace
 
         // Collect pixel values
         #pragma omp parallel for
-        for (int i = 0; i < imagesCount; i++)
+        for (size_t i = 0; i < imagesCount; i++)
         {
             const cv::Mat image = cv::imread(images[i].string());
             for (int y = 0; y < image.rows; ++y)
@@ -57,9 +57,9 @@ namespace
         cv::Mat result(firstImage.size(), firstImage.type());
 
         // Compute the median for each pixel
-        #pragma omp parallel for collapse(2)
-        for (int y = 0; y < result.rows; ++y)
-            for (int x = 0; x < result.cols; ++x)
+        #pragma omp parallel for                                // TODO: restore collapse(2)
+        for (size_t y = 0; y < result.rows; y++)
+            for (size_t x = 0; x < result.cols; x++)
             {
                 const std::span<cv::Vec3b> px(&pixels[y * result.cols * imagesCount + x * imagesCount], imagesCount);
                 std::sort(px.begin(), px.end(), [](const cv::Vec3b& a, const cv::Vec3b& b)
