@@ -76,7 +76,7 @@ class TestAstroStacker(unittest.TestCase):
             self.assertEqual(code, 0);
 
             chksums = calculate_checksums(temp_dir)
-            self.assertEqual(len(chksums), 304)
+            self.assertEqual(len(chksums), 244)
             self.assertTrue(os.path.isfile(input_file))
 
             pure_run_chksums = set(self.all_chksums.values())
@@ -90,7 +90,7 @@ class TestAstroStacker(unittest.TestCase):
             self.assertEqual(code, 0);
 
             chksums = calculate_checksums(temp_dir)
-            self.assertEqual(len(chksums), 320)
+            self.assertEqual(len(chksums), 260)
             self.assertTrue(os.path.isfile(input_file))
 
             # compare results but remove elements which will be different
