@@ -55,4 +55,4 @@ jobs:
       run: cmake --build --preset "build release"
 
     - name: Test
-      run: ctest --preset "test release"
+      run: ctest --preset "test release" --output-on-failure

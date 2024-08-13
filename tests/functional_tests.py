@@ -17,10 +17,16 @@ def run_application(app_path, args=""):
         str: The output of the console application.
     """
     try:
+        print(f"Executing: {app_path} {args}")
+
         result = subprocess.run([app_path] + args.split(),
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 text=True)
+
+        if result.returncode != 0:
+            print(f"Execution error: {result.returncode}\nstdout: {result.stdout}\nstderr: {result.stderr}")
+
         return result.stdout, result.stderr, result.returncode
     except Exception as e:
         return None, str(e), -1
