@@ -19,6 +19,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+        lfs: true
 
     - uses: seanmiddleditch/gha-setup-ninja@master
 
@@ -54,4 +55,4 @@ jobs:
       run: cmake --build --preset "build release"
 
     - name: Test
-      run: ctest --preset "test release"
+      run: ctest --preset "test release" --output-on-failure
