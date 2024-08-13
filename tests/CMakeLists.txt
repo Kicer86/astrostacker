@@ -1,9 +1,10 @@
 
-find_package(GTest)
-
+find_package(GTest REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options)
 find_package(OpenCV REQUIRED)
 find_package(spdlog REQUIRED)
+
+find_program(Python python REQUIRED)
 
 add_executable(astro-stacker-tests
     test_config.cpp
@@ -34,4 +35,15 @@ target_link_libraries(astro-stacker-tests
 add_test(
     NAME AstroStackerTests
     COMMAND astro-stacker-tests
+)
+
+add_test(
+    NAME FunctionalTests
+    COMMAND ${Python} functional_tests.py
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+set_tests_properties(FunctionalTests
+    PROPERTIES
+        ENVIRONMENT AS_PATH=$<TARGET_FILE:astro-stacker>
 )
