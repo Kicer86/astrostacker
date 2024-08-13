@@ -22,6 +22,16 @@ def calculate_checksums(directory):
     return checksums
 
 
+def filter_checksums(checksums, filter):
+    filtered_checksums = {}
+
+    for file, chksum in checksums.items():
+        if not any(substring in file for substring in filter):
+            filtered_checksums[file] = chksum
+
+    return filtered_checksums
+
+
 def run_application(app_path, args=""):
     """
     Runs the console application with the specified arguments and returns the output.
@@ -72,6 +82,21 @@ class TestAstroStacker(unittest.TestCase):
             pure_run_chksums = set(self.all_chksums.values())
             base_run_chksums = set(chksums.values())
             self.assertEqual(pure_run_chksums, base_run_chksums)
+
+    def test_split_option(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_file = "video-files/moon.mp4"
+            stdout, stderr, code = run_application(self.AS_PATH, f"--working-dir {temp_dir} --split 15,0 {input_file}")
+            self.assertEqual(code, 0);
+
+            chksums = calculate_checksums(temp_dir)
+            self.assertEqual(len(chksums), 320)
+            self.assertTrue(os.path.isfile(input_file))
+
+            # compare results but remove elements which will be different
+            pure_run_chksums = filter_checksums(self.all_chksums, ["aligned", "enhanced", "stacked"])
+            split_run_chksums = filter_checksums(chksums, ["aligned", "enhanced", "stacked"])
+            self.assertEqual(set(pure_run_chksums.values()), set(split_run_chksums.values()))
 
 
 def main(app_path):
