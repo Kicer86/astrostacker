@@ -88,6 +88,8 @@ namespace Config
         const int threads;
         const bool doObjectDetection;
         const bool collect;
+        const bool debugSteps;
+        const bool cleanup;
     };
 
 
@@ -105,6 +107,8 @@ namespace Config
             ("skip", po::value<size_t>()->default_value(0), "Skip n frames from the video begining. Example: --skip 60")
             ("disable-object-detection", "Disable object detection step")
             ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: 'median', number (1÷100%)")
+            ("debug-steps", "Some steps will generate more output files for debugging purposes")
+            ("cleanup", "Automatically remove processed files. Only final files will be left.")
             ("stop-after", po::value<size_t>()->default_value(0), "Stop processing after N steps. For 0 (default) process all")
             ("transparent-background", po::value<int>()->default_value(-1), "Post step: replace black regions with transparent after all steps (see --stop-after) are finished. Provide threshold as argument (0-255)")
             ("collect", "Post step: copy results from last step into final directory")
@@ -137,6 +141,8 @@ namespace Config
         const auto best = vm["use-best"];
         const bool doObjectDetection = vm.count("disable-object-detection") == 0;
         const std::vector<std::string> inputFilesStr = vm["input-files"].as<std::vector<std::string>>();
+        const bool debugSteps = vm.count("debug-steps") > 0;
+        const bool cleanup = vm.count("cleanup") > 0;
         const auto stopAfter = vm["stop-after"].as<size_t>();
         const auto backgroundThreshold = vm["transparent-background"].as<int>();
         const auto collect = vm.count("collect") > 0;
@@ -160,6 +166,8 @@ namespace Config
             .threads = threads,
             .doObjectDetection = doObjectDetection,
             .collect = collect,
+            .debugSteps = debugSteps,
+            .cleanup = cleanup,
         };
     }
 }

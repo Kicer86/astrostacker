@@ -44,15 +44,10 @@ def run_application(app_path, args=""):
         str: The output of the console application.
     """
     try:
-        print(f"Executing: {app_path} {args}")
-
         result = subprocess.run([app_path] + args.split(),
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 text=True)
-
-        if result.returncode != 0:
-            print(f"Execution error: {result.returncode}\nstdout: {result.stdout}\nstderr: {result.stderr}")
 
         return result.stdout, result.stderr, result.returncode
     except Exception as e:
@@ -76,7 +71,7 @@ class TestAstroStacker(unittest.TestCase):
             self.assertEqual(code, 0);
 
             chksums = calculate_checksums(temp_dir)
-            self.assertEqual(len(chksums), 304)
+            self.assertEqual(len(chksums), 244)
             self.assertTrue(os.path.isfile(input_file))
 
             pure_run_chksums = set(self.all_chksums.values())
@@ -90,7 +85,7 @@ class TestAstroStacker(unittest.TestCase):
             self.assertEqual(code, 0);
 
             chksums = calculate_checksums(temp_dir)
-            self.assertEqual(len(chksums), 320)
+            self.assertEqual(len(chksums), 260)
             self.assertTrue(os.path.isfile(input_file))
 
             # compare results but remove elements which will be different

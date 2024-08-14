@@ -58,9 +58,15 @@ namespace
 }
 
 
-export std::vector<std::filesystem::path> fixChromaticAberration(const std::filesystem::path& dir, std::span<const std::filesystem::path> images)
+export std::vector<std::filesystem::path> fixChromaticAberration(const std::filesystem::path& dir, std::span<const std::filesystem::path> images, bool debug)
 {
-    const auto fixed = Utils::processImages(images, dir, [](const auto& image)
+    const auto rDir = dir / "_red";
+    const auto gDir = dir / "_green";
+    const auto bDir = dir / "_blue";
+    const auto fDir = dir / "fixed";
+
+    const std::array dirs{fDir, rDir, gDir, bDir};
+    const auto fixed = Utils::processImages(images, dirs, debug, [](const auto& image)
     {
         // Split the image into B, G, R channels
         std::vector<cv::Mat> channels(3);
@@ -79,7 +85,7 @@ export std::vector<std::filesystem::path> fixChromaticAberration(const std::file
         cv::Mat correctedImage;
         cv::merge(alignedChannels, correctedImage);
 
-        return correctedImage;
+        return std::array{correctedImage, r, g, b};
     });
 
     return fixed;

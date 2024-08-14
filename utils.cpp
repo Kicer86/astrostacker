@@ -55,7 +55,7 @@ namespace Utils
         const auto size = items.size();
         std::exception_ptr exception = nullptr;
 
-        #pragma omp parallel for                        
+        #pragma omp parallel for
         for(size_t i = 0; i < size; i++)
         {
             try
@@ -113,6 +113,31 @@ namespace Utils
         return resultPaths;
     }
 
+    export template<typename T, std::size_t N>
+    requires std::invocable<T, const cv::Mat &> && (N > 0)
+    std::vector<std::filesystem::path> processImages(std::span<const std::filesystem::path> images, const std::array<std::filesystem::path, N>& dirs, bool debug, T&& op)
+    {
+
+        if (debug)
+        {
+            for (const auto& dir: dirs)
+                std::filesystem::create_directory(dir);
+
+            return processImages(images, std::array{dirs}, op);
+        }
+        else
+        {
+            const auto firstDir = dirs.front();
+            const auto parentDir = firstDir.parent_path();
+
+            return processImages(images, std::array{parentDir}, [op](const auto& input)
+            {
+                const auto result = op(input);
+                return result.front();
+            });
+        }
+    }
+
 
     export template<typename T>
     requires std::invocable<T, const cv::Mat &>
@@ -122,28 +147,12 @@ namespace Utils
     }
 
 
-    export void createLink(const std::filesystem::path& from, const std::filesystem::path& to)
+    export void copyFile(const std::filesystem::path& from, const std::filesystem::path& to)
     {
-        const auto targetPath = std::filesystem::relative(from, to.parent_path());
-        try
-        {
-            std::filesystem::create_symlink(targetPath, to);
-        }
-        catch (const std::filesystem::filesystem_error &)
-        {
-            try
-            {
-                std::filesystem::copy_file(from, to);
-            }
-            catch (const std::filesystem::filesystem_error& err)
-            {
-                std::cerr << err.what() << "\n";
-                throw;
-            }
-        }
+        std::filesystem::copy_file(from, to);
     }
 
-    export std::vector<std::filesystem::path> createLinks(std::span<const std::filesystem::path> from, const std::filesystem::path& to)
+    export std::vector<std::filesystem::path> copyFiles(std::span<const std::filesystem::path> from, const std::filesystem::path& to)
     {
         const auto imagesCount = from.size();
         std::vector<std::filesystem::path> result;
@@ -153,7 +162,7 @@ namespace Utils
         {
             const auto inputName = input.filename().string();
             const auto newPath = to / inputName;
-            createLink(input, newPath);
+            copyFile(input, newPath);
 
             result.push_back(newPath);
         }
