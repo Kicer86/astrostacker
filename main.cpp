@@ -65,8 +65,7 @@ int main(int argc, char** argv)
         const size_t segmentSize = framesInSegmentToBeTaken + framesInSegmentToBeIgnored;
         const size_t segments = Utils::divideWithRoundUp(frames, segmentSize);
 
-        FileManager fm(cleanup);
-        fm.ignore(config.inputFiles);
+        const FileManager fm(cleanup);
 
         std::vector<std::pair<int, std::filesystem::path>> allImages;
         for(int i = 0; i < segments; i++)

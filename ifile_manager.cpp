@@ -4,12 +4,14 @@ module;
 #include <filesystem>
 #include <span>
 
+
 export module ifile_manager;
 
+import utils;
 
 export struct IFileManager
 {
     virtual ~IFileManager() = default;
 
-    virtual void remove(std::span<const std::filesystem::path>) = 0;
+    virtual void remove(const Utils::WorkingDir& wd) const = 0;
 };
