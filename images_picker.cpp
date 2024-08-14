@@ -72,21 +72,23 @@ export std::vector<std::filesystem::path> pickImages(const std::filesystem::path
 
     std::sort(score.begin(), score.end(), cmp);
 
-    if (const auto medianMethod = std::get_if<MedianPicker>(&method))
+    auto processTop = [&](std::span<const size_t> top)
     {
-        const auto top = selectTop(score);
         const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
         const auto topPaths = Utils::createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
 
         return topPaths;
+    };
+
+    if (const auto medianMethod = std::get_if<MedianPicker>(&method))
+    {
+        const auto top = selectTop(score);
+        return processTop(top);
     }
     else if (const auto topMethod = std::get_if<int>(&method))
     {
         const auto top = selectTop(score, *topMethod);
-        const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
-        const auto topPaths = Utils::createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
-
-        return topPaths;
+        return processTop(top);
     }
     else
         return {};
