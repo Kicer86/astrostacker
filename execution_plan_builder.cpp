@@ -63,7 +63,7 @@ public:
 
         std::optional<Utils::WorkingDir> previousWorkingDir;
 
-        for(const auto& op: m_ops)
+        auto execute = [&](const Op& op)
         {
             const auto& name = std::get<0>(op);
             const auto& func = std::get<1>(op);
@@ -76,6 +76,11 @@ public:
                 m_fileManager.remove(*previousWorkingDir);
 
             previousWorkingDir = wd;
+        };
+
+        for(const auto& op: m_ops)
+        {
+            execute(op);
 
             steps--;
             if (steps == 0)
@@ -83,15 +88,7 @@ public:
         }
 
         for(const auto& op: m_postOps)
-        {
-            const auto& name = std::get<0>(op);
-            const auto& func = std::get<1>(op);
-            const auto& subdir = std::get<2>(op);
-            const auto wd = m_wd.getSubDir(subdir);
-
-            imagesList = Utils::measureTimeWithMessage(name, func, wd, imagesList);
-        }
-
+            execute(op);
 
         return imagesList;
     }
