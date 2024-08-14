@@ -75,7 +75,7 @@ export std::vector<std::filesystem::path> pickImages(const std::filesystem::path
     auto processTop = [&](std::span<const size_t> top)
     {
         const auto topImages = top | std::ranges::views::transform([&](const auto& idx) { return images[idx]; });
-        const auto topPaths = Utils::createLinks(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
+        const auto topPaths = Utils::copyFiles(std::vector<std::filesystem::path>(topImages.begin(), topImages.end()), dir);
 
         return topPaths;
     };

@@ -110,7 +110,7 @@ int main(int argc, char** argv)
                 const auto& srcPath = srcInfo.second;
                 const auto srcFileName = srcPath.filename();
                 const auto outputPath = allPath / (std::to_string(srcInfo.first) + "_" + srcFileName.string());
-                Utils::createLink(srcPath, outputPath);
+                Utils::copyFile(srcPath, outputPath);
             }
         }
     }
