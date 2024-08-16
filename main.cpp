@@ -12,6 +12,7 @@ import config;
 import execution_plan_builder;
 import file_manager;
 import frame_extractor;
+import image_extractor;
 import images_aligner;
 import images_cropper;
 import images_enhancer;
@@ -21,6 +22,18 @@ import images_stacker;
 import object_localizer;
 import transparency_applier;
 import utils;
+
+
+namespace
+{
+    size_t countInputImages(const std::filesystem::path& input)
+    {
+        if (std::filesystem::is_directory(input))
+            return countImages(input);
+        else
+            return videoFrames(input);
+    }
+}
 
 
 int main(int argc, char** argv)
@@ -54,7 +67,7 @@ int main(int argc, char** argv)
         const auto& inputFile = config.inputFiles.front();
 
         const size_t firstFrame = skip;
-        const size_t lastFrame = videoFrames(inputFile);
+        const size_t lastFrame = countInputImages(inputFile);
         const size_t frames = lastFrame - firstFrame;
 
         if (frames == 0)
