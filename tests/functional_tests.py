@@ -93,6 +93,34 @@ class TestAstroStacker(unittest.TestCase):
             split_run_chksums = filter_checksums(chksums, ["aligned", "enhanced", "stacked"])
             self.assertEqual(set(pure_run_chksums.values()), set(split_run_chksums.values()))
 
+    def test_noop_crop_option(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_file = "video-files/moon.mp4"
+            stdout, stderr, code = run_application(self.AS_PATH, f"--working-dir {temp_dir} --crop 10000x10000,0,0 {input_file}")   # width and heigh are bigger than actual image size so there should be no difference
+            self.assertEqual(code, 0);
+
+            chksums = calculate_checksums(temp_dir)
+            self.assertEqual(len(chksums), 304)
+            self.assertTrue(os.path.isfile(input_file))
+
+            # cropped set has more images (crop step) but they should be duplicates of images from previous set, so set() should remove them as duplicates
+            pure_run_chksums = set(self.all_chksums.values())
+            base_run_chksums = set(chksums.values())
+            self.assertEqual(pure_run_chksums, base_run_chksums)
+
+    def test_crop_option(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_file = "video-files/moon.mp4"
+            stdout, stderr, code = run_application(self.AS_PATH, f"--working-dir {temp_dir} --crop 100x200,-50,70 {input_file}")
+            self.assertEqual(code, 0);
+
+            chksums = calculate_checksums(temp_dir)
+            self.assertEqual(len(chksums), 304)
+            self.assertTrue(os.path.isfile(input_file))
+
+            pure_run_chksums = set(self.all_chksums.values())
+            base_run_chksums = set(chksums.values())
+            self.assertNotEqual(pure_run_chksums, base_run_chksums)
 
 def main(app_path):
     TestAstroStacker.AS_PATH = app_path
