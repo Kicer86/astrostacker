@@ -33,6 +33,19 @@ namespace
         else
             return videoFrames(input);
     }
+
+    std::vector<std::filesystem::path> extractImages(const std::filesystem::path& dir, std::span<const std::filesystem::path> files, size_t firstFrame, size_t lastFrame)
+    {
+        if (files.size() != 1)
+            throw std::runtime_error("Unexpected number of input elements: " + std::to_string(files.size()));
+
+        const auto& input = files.front();
+
+        if (std::filesystem::is_directory(input))
+            return collectImages(dir, files, firstFrame, lastFrame);
+        else
+            return extractFrames(dir, files, firstFrame, lastFrame);
+    }
 }
 
 
@@ -90,7 +103,7 @@ int main(int argc, char** argv)
             Utils::WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i + 1));
 
             ExecutionPlanBuilder epb(segmentWorkingDir, fm, stopAfter);
-            epb.addStep("Extracting frames from video.", "images", extractFrames, segmentBegin, segmentEnd);
+            epb.addStep("Acquiring input images.", "images", extractImages, segmentBegin, segmentEnd);
 
             if (doObjectDetection)
                 epb.addStep("Extracting main object.", "object", extractObject, debugSteps);
