@@ -8,6 +8,7 @@ module;
 
 export module config;
 import images_picker;
+import utils;
 
 
 namespace
@@ -23,21 +24,14 @@ namespace
         return oss.str();
     }
 
-    std::optional<std::pair<int, int>> readCrop(const boost::program_options::variable_value& cropValue)
+    std::optional<std::tuple<int, int, int, int>> readCrop(const boost::program_options::variable_value& cropValue)
     {
         if (cropValue.empty())
             return {};
         else
         {
             const auto input = cropValue.as<std::string>();
-            const size_t pos = input.find('x');
-            if (pos == std::string::npos)
-                return {};
-
-            const int width = std::stoi(input.substr(0, pos));
-            const int height = std::stoi(input.substr(pos + 1));
-
-            return std::pair{width, height};
+            return Utils::readCrop(input);
         }
     }
 
@@ -79,7 +73,7 @@ namespace Config
     {
         const std::vector<std::filesystem::path> inputFiles;
         const std::filesystem::path wd;
-        const std::optional<std::pair<int, int>> crop;
+        const std::optional<std::tuple<int, int, int, int>> crop;
         const std::optional<std::pair<int, int>> split;
         const PickerMethod pickerMethod;
         const size_t skip;
@@ -102,7 +96,7 @@ namespace Config
             ("help", "produce help message")
             ("working-dir", po::value<std::string>(), "set working directory")
             ("threads", po::value<int>()->default_value(0), "Set number of threads to use. 0 means all, negative values mean all + value. (For example -1 mean all but one)")
-            ("crop", po::value<std::string>(), "crop images to given size. Example: --crop 1000x800")
+            ("crop", po::value<std::string>(), "crop images to given size WidthxHeight. Additionaly an offset can be provided (WidthxHeight,dx,dy). Example: --crop 200x300 or --crop 1000x800,10,-5")
             ("split", po::value<std::string>(), "Split video into segments. Provide segment lenght and gap in frames as argument. Example: --split 120,40")
             ("skip", po::value<size_t>()->default_value(0), "Skip n frames from the video begining. Example: --skip 60")
             ("disable-object-detection", "Disable object detection step")

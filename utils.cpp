@@ -6,6 +6,8 @@ module;
 #include <format>
 #include <ranges>
 #include <span>
+#include <string>
+#include <boost/algorithm/string.hpp>
 #include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
 
@@ -234,5 +236,22 @@ namespace Utils
         }
 
         return result;
+    }
+
+    export std::optional<std::tuple<int, int, int, int>> readCrop(std::string_view cropValue)
+    {
+        std::vector<std::string> split;
+        std::string input(cropValue);
+        boost::split(split, input, boost::is_any_of("x,"));
+
+        if (split.size() != 4 && split.size() != 2)
+            return {};
+
+        const auto w = std::stoi(split[0]);
+        const auto h = std::stoi(split[1]);
+        const auto x = split.size() == 4? std::stoi(split[2]) : 0;
+        const auto y = split.size() == 4? std::stoi(split[3]) : 0;
+
+        return std::tuple{w, h, x, y};
     }
 }
