@@ -5,6 +5,7 @@
   "homepage": "https://github.com/Kicer86/astrostacker",
   "description": "Tool astrophotography image stacking.",
   "dependencies": [
+    "boost-algorithm",
     "boost-program-options",
     "gtest",
     {
