@@ -39,10 +39,10 @@ export std::vector<std::filesystem::path> collectImages(const std::filesystem::p
     if (not std::filesystem::is_directory(input))
         throw std::runtime_error("Input path: " + input.string() + " is not a directory");
 
-    const auto images = collectImages(dir);
-    const auto count = files.size();
+    const auto images = collectImages(input);
+    const auto count = images.size();
 
-    if (count >= lastFrame)
+    if (count < lastFrame)
         throw std::out_of_range("last frame > number of frames");
 
     return Utils::processImages(std::ranges::subrange(images.begin() + firstFrame, images.begin() + lastFrame), dir, [](const auto& image)
