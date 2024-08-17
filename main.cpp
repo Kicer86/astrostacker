@@ -74,7 +74,7 @@ int main(int argc, char** argv)
             const auto segmentBegin = i * segmentSize;
             const auto segmentEnd = std::min(segmentBegin + segmentSize, lastFrame);
 
-            Utils::WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i));
+            Utils::WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i + 1));
 
             ExecutionPlanBuilder epb(segmentWorkingDir, fm, stopAfter);
             epb.addStep("Extracting frames from video.", "images", extractFrames, segmentBegin, segmentEnd);
