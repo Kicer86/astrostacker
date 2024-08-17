@@ -185,7 +185,7 @@ namespace Utils
 
         WorkingDir getSubDir(std::string_view subdir)
         {
-            const std::filesystem::path path = m_dir / std::format("#{} {}", m_c, subdir);
+            const std::filesystem::path path = m_dir / std::format("#{} {}", m_c + 1, subdir);
             std::filesystem::create_directories(path);
             m_c++;
 
