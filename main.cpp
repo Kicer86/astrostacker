@@ -12,6 +12,7 @@ import config;
 import execution_plan_builder;
 import file_manager;
 import frame_extractor;
+import image_extractor;
 import images_aligner;
 import images_cropper;
 import images_enhancer;
@@ -21,6 +22,31 @@ import images_stacker;
 import object_localizer;
 import transparency_applier;
 import utils;
+
+
+namespace
+{
+    size_t countInputImages(const std::filesystem::path& input)
+    {
+        if (std::filesystem::is_directory(input))
+            return countImages(input);
+        else
+            return videoFrames(input);
+    }
+
+    std::vector<std::filesystem::path> extractImages(const std::filesystem::path& dir, std::span<const std::filesystem::path> files, size_t firstFrame, size_t lastFrame)
+    {
+        if (files.size() != 1)
+            throw std::runtime_error("Unexpected number of input elements: " + std::to_string(files.size()));
+
+        const auto& input = files.front();
+
+        if (std::filesystem::is_directory(input))
+            return collectImages(dir, files, firstFrame, lastFrame);
+        else
+            return extractFrames(dir, files, firstFrame, lastFrame);
+    }
+}
 
 
 int main(int argc, char** argv)
@@ -54,7 +80,7 @@ int main(int argc, char** argv)
         const auto& inputFile = config.inputFiles.front();
 
         const size_t firstFrame = skip;
-        const size_t lastFrame = videoFrames(inputFile);
+        const size_t lastFrame = countInputImages(inputFile);
         const size_t frames = lastFrame - firstFrame;
 
         if (frames == 0)
@@ -77,7 +103,7 @@ int main(int argc, char** argv)
             Utils::WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i + 1));
 
             ExecutionPlanBuilder epb(segmentWorkingDir, fm, stopAfter);
-            epb.addStep("Extracting frames from video.", "images", extractFrames, segmentBegin, segmentEnd);
+            epb.addStep("Acquiring input images.", "images", extractImages, segmentBegin, segmentEnd);
 
             if (doObjectDetection)
                 epb.addStep("Extracting main object.", "object", extractObject, debugSteps);

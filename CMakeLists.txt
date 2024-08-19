@@ -36,6 +36,7 @@ target_sources(astro-stacker
       file_manager.cpp
       frame_extractor.cpp
       ifile_manager.cpp
+      image_extractor.cpp
       images_aligner.cpp
       images_cropper.cpp
       images_enhancer.cpp
@@ -48,7 +49,7 @@ target_sources(astro-stacker
 )
 
 if (MSVC)
-    target_compile_definitions(astro-stacker PRIVATE MSVC)       
+    target_compile_definitions(astro-stacker PRIVATE MSVC)
     target_compile_options(astro-stacker PRIVATE /openmp:llvm)
 endif()
 

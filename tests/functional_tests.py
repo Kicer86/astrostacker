@@ -122,6 +122,27 @@ class TestAstroStacker(unittest.TestCase):
             base_run_chksums = set(chksums.values())
             self.assertNotEqual(pure_run_chksums, base_run_chksums)
 
+    def test_dir_as_input(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # export images from video
+            input_file = "video-files/moon.mp4"
+            stdout, stderr, code = run_application(self.AS_PATH, f"--working-dir {temp_dir}/1 --stop-after 1 {input_file}")
+            self.assertEqual(code, 0);
+
+            input_file = f"{temp_dir}/1"
+            # use extracted images as input
+            stdout, stderr, code = run_application(self.AS_PATH, f"--working-dir {temp_dir}/2 {input_file}")
+            self.assertEqual(code, 0);
+
+            # procesing images should give the same result as processing video
+            chksums = calculate_checksums(f"{temp_dir}/2")
+            self.assertEqual(len(chksums), 244)
+            self.assertTrue(os.path.isdir(input_file))
+
+            pure_run_chksums = set(self.all_chksums.values())
+            base_run_chksums = set(chksums.values())
+            self.assertEqual(pure_run_chksums, base_run_chksums)
+
 def main(app_path):
     TestAstroStacker.AS_PATH = app_path
     unittest.main()
