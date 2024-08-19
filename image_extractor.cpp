@@ -12,7 +12,7 @@ import utils;
 auto collectImages(const std::filesystem::path& inputDir)
 {
     auto files =
-        std::filesystem::directory_iterator(inputDir) |
+        std::filesystem::recursive_directory_iterator(inputDir) |
         std::views::filter([](const std::filesystem::directory_entry &entry)
         {
             return entry.is_regular_file();
