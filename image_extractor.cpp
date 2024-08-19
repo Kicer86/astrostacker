@@ -11,15 +11,16 @@ import utils;
 
 auto collectImages(const std::filesystem::path& inputDir)
 {
-    auto files = std::filesystem::directory_iterator(inputDir) |
-                        std::views::filter([](const std::filesystem::directory_entry &entry)
-                        {
-                            return entry.is_regular_file();
-                        }) |
-                        std::views::transform([](const std::filesystem::directory_entry &entry)
-                        {
-                            return entry.path();
-                        });
+    auto files =
+        std::filesystem::directory_iterator(inputDir) |
+        std::views::filter([](const std::filesystem::directory_entry &entry)
+        {
+            return entry.is_regular_file();
+        }) |
+        std::views::transform([](const std::filesystem::directory_entry &entry)
+        {
+            return entry.path();
+        });
 
     return files | std::ranges::to<std::vector>();
 }
