@@ -90,7 +90,7 @@ namespace Utils
         forEach(images, [&](const size_t i)
         {
             const auto imagePath = images[i];
-            const auto imageFilename = imagePath.filename().string();
+            const auto imageFilename = imagePath.stem().string();
             const cv::Mat image = cv::imread(imagePath.string());
 
             std::array<cv::Mat, N>  results;
@@ -102,7 +102,7 @@ namespace Utils
             std::optional<std::filesystem::path> firstPath;
             for (const auto [result, dir]: std::views::zip(results, dirs))
             {
-                const auto path = dir / imageFilename;
+                const auto path = dir / (imageFilename + ".png");
                 cv::imwrite(path.string(), result);
 
                 if (!firstPath)
