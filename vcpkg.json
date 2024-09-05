@@ -13,7 +13,6 @@
       "default-features": false,
       "features": [ "contrib", "ffmpeg", "png", "tiff" ]
     },
-    "libraw",
     "spdlog"
   ]
 }
