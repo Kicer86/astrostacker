@@ -89,7 +89,7 @@ export std::vector<std::filesystem::path> collectImages(const std::filesystem::p
         const auto filename = path.stem();
         const auto newLocation = dir / (filename.string() + ".png");
 
-        cv::imwrite(newLocation, image);
+        cv::imwrite(newLocation.string(), image);
 
         result[i] = newLocation;
     });
