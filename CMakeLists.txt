@@ -24,7 +24,14 @@ find_package(OpenMP REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(spdlog REQUIRED)
 
-pkg_check_modules(LIBRAW REQUIRED libraw)
+find_package(libraw CONFIG)
+
+if(NOT TARGET libraw::libraw_r)
+  pkg_check_modules(LIBRAW_R REQUIRED IMPORTED_TARGET libraw_r)
+  set(LIBRAW_LIBRARIES PkgConfig::LIBRAW_R)
+else()
+  set(LIBRAW_LIBRARIES libraw::libraw_r)
+endif()
 
 add_executable(astro-stacker
     main.cpp
