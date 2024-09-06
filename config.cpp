@@ -106,7 +106,7 @@ namespace Config
             ("stop-after", po::value<size_t>()->default_value(0), "Stop processing after N steps. For 0 (default) process all")
             ("transparent-background", po::value<int>()->default_value(-1), "Post step: replace black regions with transparent after all steps (see --stop-after) are finished. Provide threshold as argument (0-255)")
             ("collect", "Post step: copy results from last step into final directory")
-            ("input-files", po::value<std::vector<std::string>>(), "input files");
+            ("input-files", po::value<std::vector<std::string>>(), "path to video file or to a directory with images");
 
         po::variables_map vm;
         po::positional_options_description p;
