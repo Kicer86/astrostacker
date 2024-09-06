@@ -6,6 +6,8 @@
   "description": "Tool astrophotography image stacking.",
   "dependencies": [
     "boost-algorithm",
+    "boost-filesystem",
+    "boost-process",
     "boost-program-options",
     "gtest",
     {
