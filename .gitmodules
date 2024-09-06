@@ -4,3 +4,6 @@
 [submodule "tests/video-files"]
 	path = tests/video-files
 	url = https://gitlab.com/kicer86/video-files.git
+[submodule "third_party/indicators"]
+	path = third_party/indicators
+	url = https://github.com/Kicer86/indicators.git

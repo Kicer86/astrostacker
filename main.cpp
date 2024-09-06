@@ -5,6 +5,8 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/cfg/env.h>
 #include <omp.h>
+#include <indicators/dynamic_progress.hpp>
+#include <indicators/indeterminate_progress_bar.hpp>
 
 
 import aberration_fixer;
@@ -46,12 +48,27 @@ namespace
         else
             return extractFrames(dir, files, firstFrame, lastFrame);
     }
+
+    class HideCursor final
+    {
+    public:
+        HideCursor()
+        {
+            indicators::show_console_cursor(false);
+        }
+
+        ~HideCursor()
+        {
+            indicators::show_console_cursor(true);
+        }
+    };
 }
 
 
 int main(int argc, char** argv)
 {
     spdlog::cfg::load_env_levels();
+    HideCursor _;
 
     try
     {
@@ -93,7 +110,11 @@ int main(int argc, char** argv)
 
         const FileManager fm(cleanup);
 
+        indicators::show_console_cursor(false);
+        indicators::DynamicProgress<indicators::IndeterminateProgressBar> progressBarManager;
+        progressBarManager.set_option(indicators::option::HideBarWhenComplete{false});
         std::vector<std::pair<int, std::filesystem::path>> allImages;
+
         for(int i = 0; i < segments; i++)
         {
             spdlog::info("Processing segment {} of {}", i + 1, segments);
@@ -102,7 +123,7 @@ int main(int argc, char** argv)
 
             Utils::WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i + 1));
 
-            ExecutionPlanBuilder epb(segmentWorkingDir, fm, stopAfter);
+            ExecutionPlanBuilder epb(segmentWorkingDir, progressBarManager, fm, stopAfter);
             epb.addStep("Acquiring input images.", "images", extractImages, segmentBegin, segmentEnd);
 
             if (doObjectDetection)
