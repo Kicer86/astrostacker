@@ -31,6 +31,23 @@ namespace
         return files | std::ranges::to<std::vector>();
     }
 
+    struct RawProcessorWrapper final
+    {
+        RawProcessorWrapper() {}
+        ~RawProcessorWrapper()
+        {
+            rawProcessor.recycle();
+        }
+
+        LibRaw* operator->()
+        {
+            return &rawProcessor;
+        }
+
+    private:
+        LibRaw rawProcessor;
+    };
+
 
     template<typename T, typename V>
     constexpr T saturate_cast(const V& v)
@@ -44,21 +61,21 @@ namespace
     cv::Mat loadRawImage(const std::filesystem::path& path)
     {
         const auto pathStr = path.string();
-        LibRaw rawProcessor;
+        RawProcessorWrapper rawProcessor;
 
-        if (rawProcessor.open_file(pathStr.c_str()) != LIBRAW_SUCCESS)
+        if (rawProcessor->open_file(pathStr.c_str()) != LIBRAW_SUCCESS)
             throw std::runtime_error(std::format("Cannot open input file: {}", pathStr));
 
-        if (rawProcessor.unpack() != LIBRAW_SUCCESS)
+        if (rawProcessor->unpack() != LIBRAW_SUCCESS)
             throw std::runtime_error(std::format("Error when unpacking RAW file data: {}", pathStr));
 
         // Get raw Bayer image dimensions and the data pointer
-        const int width = rawProcessor.imgdata.sizes.iwidth;
-        const int height = rawProcessor.imgdata.sizes.iheight;
-        const int black_level = rawProcessor.imgdata.color.black; // Black level value
+        const int width = rawProcessor->imgdata.sizes.iwidth;
+        const int height = rawProcessor->imgdata.sizes.iheight;
+        const int black_level = rawProcessor->imgdata.color.black; // Black level value
 
         // Create OpenCV Mat to store the raw Bayer data (16-bit single-channel)
-        cv::Mat raw_image(height, width, CV_16UC1, rawProcessor.imgdata.rawdata.raw_image);
+        cv::Mat raw_image(height, width, CV_16UC1, rawProcessor->imgdata.rawdata.raw_image);
 
         // ------------------- Step 1: Black Level Subtraction -------------------
         // Subtract the black level from each pixel
@@ -77,9 +94,9 @@ namespace
 
         // ------------------- Step 3: White Balance Correction -------------------
         // Get white balance multipliers from metadata
-        const float wb_red_multiplier = rawProcessor.imgdata.color.cam_mul[0];
-        const float wb_green_multiplier = rawProcessor.imgdata.color.cam_mul[1];
-        const float wb_blue_multiplier = rawProcessor.imgdata.color.cam_mul[2];
+        const float wb_red_multiplier = rawProcessor->imgdata.color.cam_mul[0];
+        const float wb_green_multiplier = rawProcessor->imgdata.color.cam_mul[1];
+        const float wb_blue_multiplier = rawProcessor->imgdata.color.cam_mul[2];
 
         // Apply white balance correction
         for (int i = 0; i < demosaiced_image.rows; ++i)
@@ -106,8 +123,6 @@ namespace
         cv::Mat sharpened_image;
         cv::GaussianBlur(gamma_corrected_image, sharpened_image, cv::Size(0, 0), 3);
         cv::addWeighted(gamma_corrected_image, 1.5, sharpened_image, -0.5, 0, sharpened_image);
-
-        rawProcessor.recycle();
 
         return sharpened_image;
     }
