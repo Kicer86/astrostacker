@@ -57,7 +57,7 @@ namespace Utils
         const auto size = items.size();
         std::exception_ptr exception = nullptr;
 
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for(size_t i = 0; i < size; i++)
         {
             try
@@ -70,7 +70,7 @@ namespace Utils
     #ifdef MSVC
                 break;
     #else
-                #pragma omp cancel for
+                //#pragma omp cancel for
     #endif
             }
         }

@@ -102,6 +102,7 @@ namespace Config
             ("disable-object-detection", "Disable object detection step")
             ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: 'median', number (1÷100%)")
             ("debug-steps", "Some steps will generate more output files for debugging purposes")
+            ("in-place", "Do not add timestamp to dir. It will overwrite any data in working dir")
             ("cleanup", "Automatically remove processed files. Only final files will be left.")
             ("stop-after", po::value<size_t>()->default_value(0), "Stop processing after N steps. For 0 (default) process all")
             ("transparent-background", po::value<int>()->default_value(-1), "Post step: replace black regions with transparent after all steps (see --stop-after) are finished. Provide threshold as argument (0-255)")
@@ -136,6 +137,7 @@ namespace Config
         const bool doObjectDetection = vm.count("disable-object-detection") == 0;
         const std::vector<std::string> inputFilesStr = vm["input-files"].as<std::vector<std::string>>();
         const bool debugSteps = vm.count("debug-steps") > 0;
+        const bool inPlace = vm.count("in-place") > 0;
         const bool cleanup = vm.count("cleanup") > 0;
         const auto stopAfter = vm["stop-after"].as<size_t>();
         const auto backgroundThreshold = vm["transparent-background"].as<int>();
@@ -143,7 +145,7 @@ namespace Config
 
         const std::vector<std::filesystem::path> inputFiles(inputFilesStr.begin(), inputFilesStr.end());
         const auto pickerMethod = readPickerMethod(best);
-        const auto wd = wd_option / getCurrentTime();
+        const auto wd = inPlace? wd_option : wd_option / getCurrentTime();
 
         if (pickerMethod.has_value() == false)
             throw std::invalid_argument("Invalid value for --use-best argument: " + best.as<std::string>() + ". Expected 'median' or % value 1÷100");
