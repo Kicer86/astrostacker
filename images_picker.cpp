@@ -47,7 +47,8 @@ namespace
 }
 
 export struct MedianPicker {};
-export using PickerMethod = std::variant<int, MedianPicker>;
+export struct BestWithFriends { const int friends; };
+export using PickerMethod = std::variant<int, MedianPicker, BestWithFriends>;
 
 export std::vector<std::filesystem::path> pickImages(const std::filesystem::path& dir, std::span<const std::filesystem::path> images, const PickerMethod& method)
 {

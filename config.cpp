@@ -59,6 +59,8 @@ namespace
 
         if (pickedMethod == "median")
             return MedianPicker{};
+        else if (pickedMethod.starts_with("best-and-friends,"))
+            return BestWithFriends(std::stoi(pickedMethod.substr(17)));
         else if (const auto value = std::stoi(pickedMethod); value != 0)
             return value;
         else
@@ -100,7 +102,7 @@ namespace Config
             ("split", po::value<std::string>(), "Split video into segments. Provide segment lenght and gap in frames as argument. Example: --split 120,40")
             ("skip", po::value<size_t>()->default_value(0), "Skip n frames from the video begining. Example: --skip 60")
             ("disable-object-detection", "Disable object detection step")
-            ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: 'median', number (1÷100%)")
+            ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: 'median', 'best-and-friends,N', number (1÷100%)")
             ("debug-steps", "Some steps will generate more output files for debugging purposes")
             ("cleanup", "Automatically remove processed files. Only final files will be left.")
             ("stop-after", po::value<size_t>()->default_value(0), "Stop processing after N steps. For 0 (default) process all")
