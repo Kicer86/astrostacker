@@ -93,6 +93,17 @@ class TestAstroStacker(unittest.TestCase):
             split_run_chksums = filter_checksums(chksums, ["aligned", "enhanced", "stacked"])
             self.assertEqual(set(pure_run_chksums.values()), set(split_run_chksums.values()))
 
+    def test_split_with_gap_option(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_file = "video-files/moon.mp4"
+            stdout, stderr, code = run_application(self.AS_PATH, f"--working-dir {temp_dir} --split 10,5 {input_file}")
+            self.assertEqual(code, 0);
+
+            # expect less files than in test_split_option
+            chksums = calculate_checksums(temp_dir)
+            self.assertEqual(len(chksums), 176)
+            self.assertTrue(os.path.isfile(input_file))
+
     def test_noop_crop_option(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             input_file = "video-files/moon.mp4"
