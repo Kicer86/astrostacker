@@ -36,13 +36,31 @@ namespace
         return sigma.val[0];
     }
 
-    std::vector<size_t> selectTop(const std::vector<std::pair<double, size_t>>& images, int percent = 50) {
+    std::vector<size_t> selectTop(const std::vector<std::pair<double, size_t>>& images, int percent = 50)
+    {
         std::vector<size_t> top;
         std::ranges::transform(images, std::back_inserter(top), [](const std::pair<double, size_t> score) {return score.second;});
 
         const size_t elements = static_cast<size_t>(std::ceil(top.size() * percent / 100.0));
 
         return {top.begin(), top.begin() + elements};
+    }
+
+    std::vector<size_t> selectBestWithFriends(const std::vector<std::pair<double, size_t>>& images, int friends)
+    {
+        std::vector<size_t> top;
+        top.resize(friends * 2 + 1);
+
+        // fill 'top' with indexes from bestIdx - friends to bestIdx + friends
+        const auto& best = images.front();
+        const auto bestIdx = best.second;
+        std::iota(top.begin(), top.end(), bestIdx - friends);
+
+        // eliminate elements out of scope
+        const auto maxIdx = images.size();
+        std::erase_if(top, [maxIdx](const std::size_t& idx) { return idx < 0 || idx >= maxIdx; });
+
+        return top;
     }
 }
 
@@ -84,6 +102,11 @@ export std::vector<std::filesystem::path> pickImages(const std::filesystem::path
     if (const auto medianMethod = std::get_if<MedianPicker>(&method))
     {
         const auto top = selectTop(score);
+        return processTop(top);
+    }
+    else if (const auto bestWithFriends = std::get_if<BestWithFriends>(&method))
+    {
+        const auto top = selectBestWithFriends(score, bestWithFriends->friends);
         return processTop(top);
     }
     else if (const auto topMethod = std::get_if<int>(&method))
