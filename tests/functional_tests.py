@@ -93,6 +93,17 @@ class TestAstroStacker(unittest.TestCase):
             split_run_chksums = filter_checksums(chksums, ["aligned", "enhanced", "stacked"])
             self.assertEqual(set(pure_run_chksums.values()), set(split_run_chksums.values()))
 
+    def test_split_with_gap_option(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            input_file = "video-files/moon.mp4"
+            stdout, stderr, code = run_application(self.AS_PATH, f"--working-dir {temp_dir} --split 10,5 {input_file}")
+            self.assertEqual(code, 0);
+
+            # expect less files than in test_split_option
+            chksums = calculate_checksums(temp_dir)
+            self.assertEqual(len(chksums), 176)
+            self.assertTrue(os.path.isfile(input_file))
+
     def test_noop_crop_option(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             input_file = "video-files/moon.mp4"
@@ -144,10 +155,16 @@ class TestAstroStacker(unittest.TestCase):
             self.assertEqual(pure_run_chksums, base_run_chksums)
 
 def main(app_path):
+    if len(app_path) == 0 or os.path.isfile(app_path) == False:
+        raise Exception(f"Path to astro-stacker executable is invalid. File: '{app_path}' does not exists.")
+
     TestAstroStacker.AS_PATH = app_path
     unittest.main()
 
 
 if __name__ == "__main__":
     as_path = environ.get('AS_PATH')
+    if as_path is None or len(as_path) == 0:
+        raise Exception("AS_PATH environmental variable was not set to astro-stacker executable")
+
     main(as_path)

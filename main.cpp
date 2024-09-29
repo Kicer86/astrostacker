@@ -98,7 +98,7 @@ int main(int argc, char** argv)
         {
             spdlog::info("Processing segment {} of {}", i + 1, segments);
             const auto segmentBegin = i * segmentSize;
-            const auto segmentEnd = std::min(segmentBegin + segmentSize, lastFrame);
+            const auto segmentEnd = std::min(segmentBegin + segmentSize - framesInSegmentToBeIgnored, lastFrame);
 
             Utils::WorkingDir segmentWorkingDir = segments == 1? wd : wd.getExactSubDir(std::to_string(i + 1));
 
