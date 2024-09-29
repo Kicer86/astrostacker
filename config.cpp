@@ -53,16 +53,24 @@ namespace
         }
     }
 
-    std::optional<PickerMethod> readPickerMethod(const boost::program_options::variable_value& pickerMethod)
+    PickerMethod readPickerMethod(const boost::program_options::variable_value& pickerMethod)
     {
         const auto pickedMethod = pickerMethod.as<std::string>();
 
         if (pickedMethod == "median")
             return MedianPicker{};
-        else if (const auto value = std::stoi(pickedMethod); value != 0)
+        else if (pickedMethod.starts_with("best-with-friends,"))
+            return BestWithFriends(std::stoi(pickedMethod.substr(18)));
+        else if (pickedMethod[0] >= '0' and pickedMethod[0] <= '9')
+        {
+            const auto value = std::stoi(pickedMethod);
+            if (value == 0)
+                throw std::invalid_argument("--use-best used with integer equal to 0");
+
             return value;
+        }
         else
-            return {};
+            throw std::invalid_argument("Invalid argument for --use-best: " + pickedMethod + ". Possible values are: 'median', 'best-with-friends,N' or 'N'");
     }
 }
 
@@ -100,7 +108,7 @@ namespace Config
             ("split", po::value<std::string>(), "Split video into segments. Provide segment lenght and gap in frames as argument. Example: --split 120,40")
             ("skip", po::value<size_t>()->default_value(0), "Skip n frames from the video begining. Example: --skip 60")
             ("disable-object-detection", "Disable object detection step")
-            ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: 'median', number (1÷100%)")
+            ("use-best", po::value<std::string>()->default_value("median"), "Define how to choose best frames. Possible arguments: 'median', 'best-with-friends,N', N (1÷100%)")
             ("debug-steps", "Some steps will generate more output files for debugging purposes")
             ("cleanup", "Automatically remove processed files. Only final files will be left.")
             ("stop-after", po::value<size_t>()->default_value(0), "Stop processing after N steps. For 0 (default) process all")
@@ -145,15 +153,12 @@ namespace Config
         const auto pickerMethod = readPickerMethod(best);
         const auto wd = wd_option / getCurrentTime();
 
-        if (pickerMethod.has_value() == false)
-            throw std::invalid_argument("Invalid value for --use-best argument: " + best.as<std::string>() + ". Expected 'median' or % value 1÷100");
-
         return Config {
             .inputFiles = inputFiles,
             .wd = wd,
             .crop = crop,
             .split = split,
-            .pickerMethod = *pickerMethod,
+            .pickerMethod = pickerMethod,
             .skip = skip,
             .stopAfter = stopAfter,
             .backgroundThreshold = backgroundThreshold,
