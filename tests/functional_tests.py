@@ -155,10 +155,16 @@ class TestAstroStacker(unittest.TestCase):
             self.assertEqual(pure_run_chksums, base_run_chksums)
 
 def main(app_path):
+    if len(app_path) == 0 or os.path.isfile(app_path) == False:
+        raise Exception(f"Path to astro-stacker executable is invalid. File: '{app_path}' does not exists.")
+
     TestAstroStacker.AS_PATH = app_path
     unittest.main()
 
 
 if __name__ == "__main__":
     as_path = environ.get('AS_PATH')
+    if as_path is None or len(as_path) == 0:
+        raise Exception("AS_PATH environmental variable was not set to astro-stacker executable")
+
     main(as_path)
