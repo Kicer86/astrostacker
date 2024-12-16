@@ -6,6 +6,9 @@ module;
 #include <span>
 #include <vector>
 
+#include <indicators/dynamic_progress.hpp>
+#include <indicators/indeterminate_progress_bar.hpp>
+
 export module execution_plan_builder;
 import ifile_manager;
 import utils;
@@ -18,8 +21,9 @@ export using Operation = std::function<ImagesList(const Utils::WorkingDir &, Ima
 export class ExecutionPlanBuilder
 {
 public:
-    ExecutionPlanBuilder(const Utils::WorkingDir& wd, const IFileManager& fileManager, size_t maxSteps = std::numeric_limits<size_t>::max())
+    ExecutionPlanBuilder(const Utils::WorkingDir& wd, indicators::DynamicProgress<indicators::IndeterminateProgressBar>& progressBarManager, const IFileManager& fileManager, size_t maxSteps = std::numeric_limits<size_t>::max())
         : m_wd(wd)
+        , m_progressBarManager(progressBarManager)
         , m_fileManager(fileManager)
         , m_maxSteps(maxSteps == 0? std::numeric_limits<size_t>::max(): maxSteps)
     {
@@ -70,7 +74,32 @@ public:
             const auto& subdir = std::get<2>(op);
             const auto wd = m_wd.getSubDir(subdir);
 
-            imagesList = Utils::measureTimeWithMessage(name, func, wd, imagesList);
+            auto bar = std::make_unique<indicators::IndeterminateProgressBar>(
+                //indicators::option::BarWidth{40},
+                indicators::option::Start{"["},
+                indicators::option::Fill{"·"},
+                indicators::option::Lead{"<==>"},
+                indicators::option::End{"]"},
+                indicators::option::PostfixText{name}
+                //indicators::option::ForegroundColor{indicators::Color::yellow},
+                //indicators::option::FontStyles{
+                //    std::vector<indicators::FontStyle>{indicators::FontStyle::bold}}
+            );
+
+            const auto barIdx = m_progressBarManager.push_back(std::move(bar));
+
+            std::jthread progressBarThread([this, barIdx]
+            {
+                while (m_progressBarManager[barIdx].is_completed() == false)
+                {
+                    m_progressBarManager[barIdx].tick();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+            });
+
+            imagesList = func(wd, imagesList);
+            m_progressBarManager[barIdx].set_option(indicators::option::Lead{"·"});
+            m_progressBarManager[barIdx].mark_as_completed();
 
             if (previousWorkingDir)
                 m_fileManager.remove(*previousWorkingDir);
@@ -98,6 +127,7 @@ private:
     std::vector<Op> m_ops;
     std::vector<Op> m_postOps;
     Utils::WorkingDir m_wd;
+    indicators::DynamicProgress<indicators::IndeterminateProgressBar>& m_progressBarManager;
     const IFileManager& m_fileManager;
     const size_t m_maxSteps;
 };
