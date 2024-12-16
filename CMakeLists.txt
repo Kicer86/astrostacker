@@ -18,7 +18,7 @@ enable_testing()
 
 add_subdirectory(tests)
 
-find_package(Boost REQUIRED COMPONENTS program_options)
+find_package(Boost REQUIRED COMPONENTS filesystem process program_options)
 find_package(OpenCV REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(spdlog REQUIRED)
@@ -56,6 +56,7 @@ endif()
 target_link_libraries(astro-stacker
     PRIVATE
         Boost::program_options
+        Boost::filesystem
         opencv_tracking
         opencv_videoio
         opencv_photo
